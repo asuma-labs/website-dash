@@ -30,11 +30,20 @@ export async function PATCH(request: Request) {
 
   const body = await request.json()
 
+  const allowedFields = ['display_name', 'bio', 'avatar_url']
+  const updates: any = { updated_at: new Date().toISOString() }
+
+  for (const field of allowedFields) {
+    if (body[field] !== undefined) {
+      updates[field] = body[field]
+    }
+  }
+
   const { data: profile, error } = await supabase
     .from('profiles')
-    .update({ ...body, updated_at: new Date().toISOString() })
+    .update(updates)
     .eq('id', magicToken.user_id)
-    .select('id, username, phone_number, email')
+    .select('id, username, phone_number, email, display_name, bio, avatar_url')
     .single()
 
   if (error) {
