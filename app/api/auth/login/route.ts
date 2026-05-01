@@ -26,10 +26,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Username tidak ditemukan' }, { status: 404 })
   }
 
-  if (!profile.password_hash) {
-    return NextResponse.json({ error: 'Akun ini belum memiliki password' }, { status: 400 })
-  }
-
   const validPassword = await bcrypt.compare(password, profile.password_hash)
 
   if (!validPassword) {
@@ -38,33 +34,47 @@ export async function POST(request: Request) {
 
   const email = profile.email || `${profile.username}@asuma.local`
 
-  const { data: existingUser } = await supabase.auth.admin.getUserById(profile.id)
-
-  if (!existingUser?.user) {
-    const { error: createError } = await supabase.auth.admin.createUser({
-      id: profile.id,
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { username: profile.username, phone_number: profile.phone_number },
-    })
-
-    if (createError) {
-      console.error('Create auth user error:', createError)
-      return NextResponse.json({ error: 'Gagal membuat sesi' }, { status: 500 })
-    }
-  } else {
-    await supabase.auth.admin.updateUserById(profile.id, { password })
-  }
-
   const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
-  if (signInError || !signInData?.session) {
-    console.error('Sign in error:', signInError)
-    return NextResponse.json({ error: 'Gagal login' }, { status: 500 })
+  if (signInError) {
+    const newPassword = password + '_auth'
+    
+    try {
+      const { data: existingUser } = await supabase.auth.admin.getUserById(profile.id)
+      
+      if (!existingUser?.user) {
+        await supabase.auth.admin.createUser({
+          id: profile.id,
+          email,
+          password: newPassword,
+          email_confirm: true,
+          user_metadata: { username: profile.username, phone_number: profile.phone_number },
+        })
+      } else {
+        await supabase.auth.admin.updateUserById(profile.id, { password: newPassword })
+      }
+
+      const { data: retrySignIn } = await supabase.auth.signInWithPassword({
+        email,
+        password: newPassword,
+      })
+
+      if (retrySignIn?.session) {
+        return NextResponse.json({
+          success: true,
+          username: profile.username,
+          access_token: retrySignIn.session.access_token,
+          refresh_token: retrySignIn.session.refresh_token,
+        })
+      }
+    } catch (e) {
+      console.error('Auth fix error:', e)
+    }
+    
+    return NextResponse.json({ error: 'Gagal membuat sesi' }, { status: 500 })
   }
 
   return NextResponse.json({
