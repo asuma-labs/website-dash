@@ -4,8 +4,11 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 
 export async function POST(request: Request) {
-  const { phone_number } = await request.json()
-  if (!phone_number) return NextResponse.json({ error: 'Nomor wajib diisi' }, { status: 400 })
+  const { phone_number, username } = await request.json()
+
+  if (!phone_number && !username) {
+    return NextResponse.json({ error: 'Nomor atau username diperlukan' }, { status: 400 })
+  }
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,14 +16,19 @@ export async function POST(request: Request) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id, username')
-    .eq('phone_number', phone_number)
-    .single()
+  let query = supabase.from('profiles').select('id, username, phone_number')
+
+  if (phone_number) {
+    query = query.eq('phone_number', phone_number)
+  }
+  if (username) {
+    query = query.eq('username', username)
+  }
+
+  const { data: profile } = await query.single()
 
   if (!profile) {
-    return NextResponse.json({ error: 'Nomor tidak terdaftar' }, { status: 404 })
+    return NextResponse.json({ error: 'Akun tidak ditemukan' }, { status: 404 })
   }
 
   const magicToken = crypto.randomBytes(32).toString('hex')
@@ -35,7 +43,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     success: true,
+    username: profile.username,
     magic_link: magicLink,
-    message: `Login link untuk @${profile.username}: ${magicLink}`,
   })
 }
