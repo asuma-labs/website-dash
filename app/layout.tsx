@@ -1,22 +1,16 @@
+// app/layout.tsx
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
-
 export const metadata: Metadata = {
-  title: 'Canvas Board',
-  description: 'Interactive drawing canvas',
+  title: 'Asuma MD',
+  description: 'WhatsApp Bot Multi-Device Dashboard',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="id">
+      <body className="bg-gray-950 text-white antialiased">{children}</body>
     </html>
   )
 }
