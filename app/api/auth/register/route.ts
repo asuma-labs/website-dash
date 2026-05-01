@@ -11,13 +11,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Semua field wajib diisi' }, { status: 400 })
   }
 
-  const usernameRegex = /^[a-z0-9_-]{3,20}$/
-  if (!usernameRegex.test(username)) {
-    return NextResponse.json({ error: 'Username: lowercase, angka, -, _ (3-20 karakter)' }, { status: 400 })
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return NextResponse.json({ error: 'Format tidak valid' }, { status: 400 })
+  }
+
+  const trimmedUsername = username.toLowerCase().trim()
+  const trimmedPhone = phone_number.replace(/[^0-9]/g, '')
+
+  if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
+    return NextResponse.json({ error: 'Username harus 3-20 karakter' }, { status: 400 })
+  }
+
+  const usernameRegex = /^[a-z0-9_-]+$/
+  if (!usernameRegex.test(trimmedUsername)) {
+    return NextResponse.json({ error: 'Username hanya boleh: huruf kecil, angka, -, _' }, { status: 400 })
   }
 
   if (password.length < 6) {
     return NextResponse.json({ error: 'Password minimal 6 karakter' }, { status: 400 })
+  }
+
+  if (trimmedPhone.length < 10 || trimmedPhone.length > 15) {
+    return NextResponse.json({ error: 'Nomor telepon tidak valid' }, { status: 400 })
+  }
+
+  const bannedWords = ['admin', 'root', 'bot', 'system', 'mod', 'owner', 'asuma', 'official', 'staff', 'ceo', 'founder']
+  if (bannedWords.some(word => trimmedUsername.includes(word))) {
+    return NextResponse.json({ error: 'Username mengandung kata terlarang' }, { status: 400 })
   }
 
   const supabase = createClient(
@@ -29,15 +49,15 @@ export async function POST(request: Request) {
   const { data: existingUser } = await supabase
     .from('profiles')
     .select('username, phone_number')
-    .or(`username.eq.${username},phone_number.eq.${phone_number}`)
-    .single()
+    .or(`username.eq.${trimmedUsername},phone_number.eq.${trimmedPhone}`)
+    .maybeSingle()
 
   if (existingUser) {
-    if (existingUser.username === username) {
-      return NextResponse.json({ error: 'Username sudah dipakai' }, { status: 409 })
+    if (existingUser.username === trimmedUsername) {
+      return NextResponse.json({ error: '❌ Username sudah digunakan. Silakan pilih username lain.' }, { status: 409 })
     }
-    if (existingUser.phone_number === phone_number) {
-      return NextResponse.json({ error: 'Nomor sudah terdaftar' }, { status: 409 })
+    if (existingUser.phone_number === trimmedPhone) {
+      return NextResponse.json({ error: '❌ Nomor WhatsApp ini sudah terdaftar. Gunakan .login untuk masuk.' }, { status: 409 })
     }
   }
 
@@ -46,16 +66,17 @@ export async function POST(request: Request) {
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .insert({
-      username,
+      username: trimmedUsername,
       password_hash,
-      phone_number,
-      email: `${username}@asuma.local`,
+      phone_number: trimmedPhone,
+      email: `${trimmedUsername}@asuma.local`,
     })
     .select('id')
     .single()
 
   if (profileError || !profile) {
-    return NextResponse.json({ error: 'Gagal membuat akun' }, { status: 500 })
+    console.error('Profile insert error:', profileError)
+    return NextResponse.json({ error: 'Gagal membuat akun. Coba lagi nanti.' }, { status: 500 })
   }
 
   const magicToken = crypto.randomBytes(32).toString('hex')
@@ -69,6 +90,7 @@ export async function POST(request: Request) {
     })
 
   if (tokenError) {
+    console.error('Token insert error:', tokenError)
     return NextResponse.json({ error: 'Gagal generate token' }, { status: 500 })
   }
 
@@ -76,8 +98,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     success: true,
-    username,
+    username: trimmedUsername,
     magic_link: magicLink,
-    message: `Akun @${username} berhasil dibuat! Klik link untuk login.`,
   })
 }
