@@ -41,9 +41,18 @@ export async function POST(request: Request) {
     expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   })
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     success: true,
     username: profile.username,
-    token: loginToken,
   })
+
+  response.cookies.set('auth_token', loginToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+  })
+
+  return response
 }
