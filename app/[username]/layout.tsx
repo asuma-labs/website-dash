@@ -2,7 +2,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import DashboardNav from '@/components/DashboardNav'
+import Sidebar from '@/components/Sidebar'
+import BottomNav from '@/components/BottomNav'
 
 export default async function UsernameLayout({
   children,
@@ -25,39 +26,31 @@ export default async function UsernameLayout({
 
   const { data: magicToken } = await supabase
     .from('magic_tokens')
-    .select('user_id, expires_at')
+    .select('user_id')
     .eq('token', token)
     .eq('used', false)
+    .gt('expires_at', new Date().toISOString())
     .single()
 
-  if (!magicToken || new Date(magicToken.expires_at) < new Date()) {
-    redirect('/login')
-  }
+  if (!magicToken) redirect('/login')
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, username')
+    .select('username')
     .eq('id', magicToken.user_id)
     .single()
 
-  if (!profile || profile.username !== username) {
-    redirect('/login')
-  }
-
-  await supabase.from('magic_tokens').update({
-    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-  }).eq('token', token)
+  if (!profile || profile.username !== username) redirect('/login')
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
-      <div className="fixed inset-0 bg-[url('/icons/android-chrome-192x192.png')] bg-fixed opacity-[0.02] pointer-events-none" />
-      <DashboardNav username={profile.username} />
-      <div className="lg:ml-72 min-h-screen">
-        <div className="fixed top-0 left-72 right-0 h-32 bg-gradient-to-b from-gray-950/80 to-transparent pointer-events-none z-30" />
-        <main className="relative p-4 pt-20 lg:p-8 lg:pt-8">
+      <Sidebar username={profile.username} />
+      <div className="lg:ml-72 min-h-screen pb-24 lg:pb-0">
+        <main className="p-4 pt-20 lg:p-8 lg:pt-8">
           {children}
         </main>
       </div>
+      <BottomNav username={profile.username} />
     </div>
   )
 }
