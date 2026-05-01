@@ -1,9 +1,9 @@
-// app/[username]/profile/page.tsx,
+// app/[username]/profile/page.tsx
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Bot, Zap, Crown, Settings, Shield, LogOut, Edit3, Save, X, RefreshCw, Camera, Check, Upload } from 'lucide-react'
+import { Bot, Zap, Crown, Settings, Shield, LogOut, Edit3, Save, X, RefreshCw, Camera, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 
@@ -87,7 +87,7 @@ export default function ProfilePage() {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto space-y-6">
       <div className="text-center">
-        <div className="relative inline-block group">
+        <div className="relative inline-block">
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -102,15 +102,16 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
-          
+
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-0 right-0 w-9 h-9 bg-gray-900 border-2 border-gray-700 rounded-full flex items-center justify-center hover:bg-gray-800 transition shadow-lg opacity-0 group-hover:opacity-100"
+            disabled={uploading}
+            className="absolute -bottom-1 -right-1 w-10 h-10 bg-emerald-500 hover:bg-emerald-600 border-2 border-gray-900 rounded-full flex items-center justify-center transition-all shadow-lg active:scale-95"
           >
             {uploading ? (
-              <RefreshCw size={16} className="animate-spin text-emerald-400" />
+              <RefreshCw size={18} className="animate-spin text-white" />
             ) : (
-              <Camera size={16} className="text-gray-300" />
+              <Camera size={18} className="text-white" />
             )}
           </button>
           <input
