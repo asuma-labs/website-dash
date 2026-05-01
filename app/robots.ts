@@ -6,29 +6,18 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
-      allow: [
-        '/',
-        '/*/', // Mengizinkan halaman profil (e.g., /ditss)
-      ],
+      allow: '/',
       disallow: [
-        // Auth & System
         '/_next/',
+        '/api/',
         '/login',
         '/register',
-        '/api/',
-        
-        // Global Panels
         '/dashboard/',
         '/settings/',
         '/private/',
-
-        // User-specific Private Areas (GitHub Style)
         '/*/settings',
         '/*/edit',
         '/*/private',
-        
-        // Anti-Duplicate Content
-        '/*?*', 
       ],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
