@@ -2,7 +2,8 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import Link from 'next/link'
 
-export default async function BotsPage({ params }: { params: { username: string } }) {
+export default async function BotsPage({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -17,7 +18,7 @@ export default async function BotsPage({ params }: { params: { username: string 
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Bot Saya</h1>
         <Link
-          href={`/${params.username}/bots/new`}
+          href={`/${username}/bots/new`}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition text-sm"
         >
           + Tambah Bot
@@ -29,7 +30,7 @@ export default async function BotsPage({ params }: { params: { username: string 
           <p className="text-4xl mb-4">🤖</p>
           <p className="text-gray-400 mb-4">Belum ada bot terdaftar</p>
           <Link
-            href={`/${params.username}/bots/new`}
+            href={`/${username}/bots/new`}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition inline-block"
           >
             Tambah Bot Pertama
@@ -40,7 +41,7 @@ export default async function BotsPage({ params }: { params: { username: string 
           {bots?.map((bot: any) => (
             <Link
               key={bot.id}
-              href={`/${params.username}/bots/${bot.id}`}
+              href={`/${username}/bots/${bot.id}`}
               className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition"
             >
               <div className="flex items-center justify-between">
