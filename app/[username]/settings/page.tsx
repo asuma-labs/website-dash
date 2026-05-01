@@ -1,7 +1,8 @@
 // app/[username]/settings/page.tsx
 import { createServerSupabase } from '@/lib/supabase/server'
 
-export default async function UserSettingsPage({ params }: { params: { username: string } }) {
+export default async function UserSettingsPage({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
 
