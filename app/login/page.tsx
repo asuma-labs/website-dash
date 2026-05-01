@@ -1,12 +1,10 @@
 // app/login/page.tsx
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Suspense, useState } from 'react'
 
 function LoginForm() {
-  const supabase = createClient()
   const router = useRouter()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -22,7 +20,6 @@ function LoginForm() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: username.toLowerCase(), password }),
-      credentials: 'include',
     })
 
     const data = await res.json()
