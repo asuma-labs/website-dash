@@ -49,9 +49,13 @@ export default async function UsernameLayout({
   }).eq('token', token)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
       <DashboardNav user={{ user_metadata: { username: profile.username } }} username={profile.username} />
-      <main className="flex-1 p-8 ml-72">{children}</main>
+      <div className="lg:pl-72">
+        <main className="p-4 lg:p-8 min-h-screen">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }
