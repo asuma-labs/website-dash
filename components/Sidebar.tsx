@@ -15,12 +15,10 @@ export default function Sidebar({ username }: { username: string }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  // Tutup mobile sidebar saat route berubah
   useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
 
-  // Lock scroll saat mobile sidebar terbuka
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = 'hidden'
@@ -38,46 +36,45 @@ export default function Sidebar({ username }: { username: string }) {
   }
 
   const mainLinks = [
-    { 
-      href: `/${username}`, 
-      label: 'Overview', 
-      icon: Home, 
+    {
+      href: `/${username}`,
+      label: 'Overview',
+      icon: Home,
       gradient: 'from-blue-400 to-cyan-400',
-      badge: null
+      badge: null,
     },
-    { 
-      href: `/${username}/bots`, 
-      label: 'Bot Saya', 
-      icon: Bot, 
+    {
+      href: `/${username}/bots`,
+      label: 'Bot Saya',
+      icon: Bot,
       gradient: 'from-blue-500 to-indigo-500',
-      badge: '3'
+      badge: '3',
     },
-    { 
-      href: `/${username}/chat`, 
-      label: 'Chat', 
-      icon: MessageSquare, 
+    {
+      href: `/${username}/chat`,
+      label: 'Chat',
+      icon: MessageSquare,
       gradient: 'from-sky-400 to-blue-500',
-      badge: null
+      badge: null,
     },
-    { 
-      href: `/${username}/stats`, 
-      label: 'Statistics', 
-      icon: BarChart3, 
+    {
+      href: `/${username}/stats`,
+      label: 'Statistics',
+      icon: BarChart3,
       gradient: 'from-cyan-400 to-teal-400',
-      badge: 'New'
+      badge: 'New',
     },
   ]
 
   const bottomLinks = [
-    { 
-      href: `/${username}/settings`, 
-      label: 'Settings', 
-      icon: Settings, 
+    {
+      href: `/${username}/settings`,
+      label: 'Settings',
+      icon: Settings,
       gradient: 'from-slate-400 to-gray-500',
     },
   ]
 
-  // Quick actions di atas (opsional, munculin di hover area tertentu)
   const quickActions = [
     { icon: Plus, label: 'New Bot', href: `/${username}/bots/new`, gradient: 'from-blue-400 to-cyan-400' },
     { icon: Sparkles, label: 'Templates', href: `/${username}/templates`, gradient: 'from-indigo-400 to-purple-400' },
@@ -85,7 +82,6 @@ export default function Sidebar({ username }: { username: string }) {
 
   return (
     <>
-      {/* Mobile Toggle Button */}
       <motion.button
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -94,11 +90,9 @@ export default function Sidebar({ username }: { username: string }) {
         className="lg:hidden fixed top-4 right-4 z-50 p-3 bg-gray-950/80 backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/40 group"
       >
         <Menu size={22} className="text-blue-400 group-hover:text-white transition-colors" />
-        {/* Glow effect */}
         <div className="absolute inset-0 rounded-2xl bg-blue-500/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
       </motion.button>
 
-      {/* Mobile Overlay */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -112,7 +106,6 @@ export default function Sidebar({ username }: { username: string }) {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
       <aside
         className={`
           fixed top-0 left-0 h-full z-40
@@ -128,16 +121,11 @@ export default function Sidebar({ username }: { username: string }) {
           className="h-full flex flex-col pl-3 py-3 lg:pl-4 lg:py-4"
         >
           <div className="relative flex flex-col h-full bg-gray-950/70 backdrop-blur-3xl border border-white/[0.06] rounded-[2.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.03)] overflow-hidden w-72">
-            {/* Ambient light - BLUE THEME */}
             <div className="absolute -top-20 -left-20 w-40 h-40 bg-blue-500/15 rounded-full blur-3xl pointer-events-none animate-pulse" />
             <div className="absolute -bottom-20 -right-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
 
-            {/* Top grain texture */}
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.015] pointer-events-none" />
-
             <div className="relative flex flex-col h-full p-5">
-              {/* Close button mobile */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setMobileOpen(false)}
@@ -146,7 +134,6 @@ export default function Sidebar({ username }: { username: string }) {
                 <X size={18} className="text-gray-400 group-hover:text-white transition-colors" />
               </motion.button>
 
-              {/* Logo & Brand */}
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -155,14 +142,11 @@ export default function Sidebar({ username }: { username: string }) {
               >
                 <Link href={`/${username}`} className="flex items-center gap-3.5 group">
                   <div className="relative">
-                    {/* Logo glow */}
                     <div className="absolute inset-0 bg-blue-500/40 rounded-2xl blur-xl group-hover:blur-2xl group-hover:bg-blue-400/50 transition-all duration-500" />
                     <div className="relative w-12 h-12 bg-gradient-to-br from-blue-400 via-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/25 border border-white/15 overflow-hidden">
-                      {/* Shine */}
                       <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/10 to-transparent" />
                       <img src="/icons/android-chrome-192x192.png" alt="Asuma" className="w-7 h-7 relative z-10 drop-shadow-lg" />
                     </div>
-                    {/* Status dot */}
                     <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-gray-950 shadow-lg shadow-emerald-400/50" />
                   </div>
                   <div>
@@ -174,7 +158,6 @@ export default function Sidebar({ username }: { username: string }) {
                 </Link>
               </motion.div>
 
-              {/* Quick Actions */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -201,10 +184,8 @@ export default function Sidebar({ username }: { username: string }) {
                 </div>
               </motion.div>
 
-              {/* Divider */}
               <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent mb-4" />
 
-              {/* Main Navigation */}
               <nav className="flex-1 space-y-1">
                 <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest px-3 mb-2">
                   Menu
@@ -226,7 +207,6 @@ export default function Sidebar({ username }: { username: string }) {
                             : 'text-gray-400 hover:text-gray-200'
                         }`}
                       >
-                        {/* Active background */}
                         {isActive && (
                           <motion.div
                             layoutId="activeSidebar"
@@ -235,10 +215,8 @@ export default function Sidebar({ username }: { username: string }) {
                           />
                         )}
 
-                        {/* Hover background */}
                         <div className="absolute inset-0 bg-white/[0.03] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                        {/* Icon */}
                         <div
                           className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
                             isActive
@@ -256,10 +234,8 @@ export default function Sidebar({ username }: { username: string }) {
                           />
                         </div>
 
-                        {/* Label */}
                         <span className="text-sm font-medium relative z-10">{label}</span>
 
-                        {/* Badge */}
                         {badge && (
                           <span
                             className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full relative z-10 ${
@@ -272,7 +248,6 @@ export default function Sidebar({ username }: { username: string }) {
                           </span>
                         )}
 
-                        {/* Active indicator arrow */}
                         {isActive && (
                           <motion.div
                             initial={{ opacity: 0, x: -4 }}
@@ -288,14 +263,12 @@ export default function Sidebar({ username }: { username: string }) {
                 })}
               </nav>
 
-              {/* Bottom Section */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
                 className="relative mt-auto space-y-2"
               >
-                {/* Settings */}
                 {bottomLinks.map(({ href, label, icon: Icon, gradient }) => {
                   const isActive = pathname === href
                   return (
@@ -326,16 +299,13 @@ export default function Sidebar({ username }: { username: string }) {
                   )
                 })}
 
-                {/* User Card */}
                 <div className="relative rounded-2xl bg-white/[0.03] border border-white/[0.06] p-3 hover:bg-white/[0.05] transition-all duration-300 group">
                   <div className="flex items-center gap-3">
-                    {/* Avatar */}
                     <div className="relative">
                       <div className="absolute inset-0 bg-blue-400/30 rounded-full blur-md group-hover:blur-lg transition-all" />
                       <div className="relative w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white/15 shadow-lg">
                         {username[0].toUpperCase()}
                       </div>
-                      {/* Online dot */}
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-gray-950 shadow-lg shadow-emerald-400/50 animate-pulse" />
                     </div>
 
@@ -347,16 +317,13 @@ export default function Sidebar({ username }: { username: string }) {
                       </div>
                     </div>
 
-                    {/* Premium badge */}
                     <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 group/badge">
                       <Crown size={13} className="text-white" />
-                      {/* Shine */}
                       <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent rounded-xl opacity-0 group-hover/badge:opacity-100 transition-opacity" />
                     </div>
                   </div>
                 </div>
 
-                {/* Logout Button */}
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
@@ -365,8 +332,6 @@ export default function Sidebar({ username }: { username: string }) {
                 >
                   <LogOut size={16} className="group-hover:-translate-x-0.5 transition-transform duration-300" />
                   <span className="text-sm font-medium">Logout</span>
-                  
-                  {/* Subtle red glow on hover */}
                   <div className="absolute inset-0 bg-red-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </motion.button>
               </motion.div>
