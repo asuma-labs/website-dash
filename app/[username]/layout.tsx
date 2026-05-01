@@ -15,9 +15,7 @@ export default async function UsernameLayout({
   const cookieStore = await cookies()
   const token = cookieStore.get('auth_token')?.value
 
-  if (!token) {
-    redirect('/login')
-  }
+  if (!token) redirect('/login')
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,9 +49,9 @@ export default async function UsernameLayout({
   }).eq('token', token)
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white flex">
       <DashboardNav user={{ user_metadata: { username: profile.username } }} username={profile.username} />
-      <main className="flex-1 p-8 ml-64">{children}</main>
+      <main className="flex-1 p-8 ml-72">{children}</main>
     </div>
   )
 }
