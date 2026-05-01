@@ -7,8 +7,9 @@ import { ArrowLeft } from 'lucide-react'
 export default async function BotUsersPage({
   params,
 }: {
-  params: { username: string; botId: string }
+  params: Promise<{ username: string; botId: string }>
 }) {
+  const { username, botId } = await params
   const supabase = await createServerSupabase()
   const supabase2 = createBotDB()
   const { data: { user } } = await supabase.auth.getUser()
@@ -16,7 +17,7 @@ export default async function BotUsersPage({
   const { data: bot } = await supabase
     .from('bot_instances')
     .select('phone_number, bot_name')
-    .eq('id', params.botId)
+    .eq('id', botId)
     .eq('user_id', user?.id)
     .single()
 
@@ -34,7 +35,7 @@ export default async function BotUsersPage({
   return (
     <div>
       <Link
-        href={`/${params.username}/bots/${params.botId}`}
+        href={`/${username}/bots/${botId}`}
         className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition"
       >
         <ArrowLeft size={20} />
