@@ -2,51 +2,42 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
 
 function LoginForm() {
   const supabase = createClient()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const [phoneNumber, setPhoneNumber] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.user_metadata?.username) {
-        const redirect = searchParams.get('redirect')
-        router.push(redirect || `/${session.user.user_metadata.username}`)
-      }
-    })
-  }, [])
-
-  const handleRequestMagicLink = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const cleanPhone = phoneNumber.replace(/[^0-9]/g, '')
-
-    const res = await fetch('/api/auth/request-magic-link', {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone_number: cleanPhone }),
+      body: JSON.stringify({ username: username.toLowerCase(), password }),
     })
 
     const data = await res.json()
 
     if (!res.ok) {
-      setError(data.error || 'Gagal mengirim link')
+      setError(data.error || 'Login gagal')
       setLoading(false)
       return
     }
 
-    setError('')
-    alert(`Link login telah dikirim ke WhatsApp kamu!\n\n${data.magic_link}`)
-    setLoading(false)
+    await supabase.auth.setSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+    })
+
+    router.push(`/${data.username}`)
   }
 
   return (
@@ -55,14 +46,26 @@ function LoginForm() {
         <h1 className="text-3xl font-bold text-white text-center mb-2">Asuma MD</h1>
         <p className="text-gray-400 text-center mb-8">Login Dashboard</p>
 
-        <form onSubmit={handleRequestMagicLink}>
+        <form onSubmit={handleLogin}>
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Nomor WhatsApp</label>
+            <label className="block text-sm font-medium mb-2">Username</label>
             <input
               type="text"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="6281234567890"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="username"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500 transition"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••"
               className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500 transition"
               required
             />
@@ -79,7 +82,7 @@ function LoginForm() {
             disabled={loading}
             className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition"
           >
-            {loading ? 'Mengirim...' : 'Kirim Link Login'}
+            {loading ? 'Loading...' : 'Login'}
           </button>
         </form>
 
