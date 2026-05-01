@@ -2,7 +2,8 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import Link from 'next/link'
 
-export default async function DashboardPage({ params }: { params: { username: string } }) {
+export default async function DashboardPage({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -17,7 +18,7 @@ export default async function DashboardPage({ params }: { params: { username: st
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-2">Selamat Datang, @{params.username}</h1>
+      <h1 className="text-2xl font-bold mb-2">Selamat Datang, @{username}</h1>
       <p className="text-gray-400 mb-8">Dashboard Overview</p>
 
       <div className="grid grid-cols-3 gap-6 mb-8">
@@ -39,7 +40,7 @@ export default async function DashboardPage({ params }: { params: { username: st
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Bot Saya</h2>
           <Link
-            href={`/${params.username}/bots/new`}
+            href={`/${username}/bots/new`}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition text-sm"
           >
             + Tambah Bot
@@ -53,7 +54,7 @@ export default async function DashboardPage({ params }: { params: { username: st
             {bots?.map((bot: any) => (
               <Link
                 key={bot.id}
-                href={`/${params.username}/bots/${bot.id}`}
+                href={`/${username}/bots/${bot.id}`}
                 className="flex items-center justify-between p-4 bg-gray-800 rounded-lg hover:bg-gray-750 transition"
               >
                 <div>
