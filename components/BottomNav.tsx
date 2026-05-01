@@ -2,7 +2,7 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
-import { Home, Bot, Plus, Settings, User, Sparkles, Globe, MessageSquare, X, Search, Zap } from 'lucide-react'
+import { Home, Bot, Plus, Settings, User, Sparkles, Globe, MessageSquare, X, Zap, Search } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
@@ -44,8 +44,8 @@ export default function BottomNav({ username }: { username: string }) {
       icon: Bot,
       label: 'Create Bot',
       desc: 'Build a new AI assistant',
-      gradient: 'from-emerald-400 to-green-600',
-      glowColor: 'rgba(52, 211, 153, 0.3)',
+      gradient: 'from-blue-500 to-cyan-500',
+      glowColor: 'rgba(59, 130, 246, 0.25)',
       hotkey: '⌘N',
     },
     {
@@ -53,8 +53,8 @@ export default function BottomNav({ username }: { username: string }) {
       icon: Sparkles,
       label: 'Templates',
       desc: 'Start from pre-built',
-      gradient: 'from-violet-400 to-purple-600',
-      glowColor: 'rgba(167, 139, 250, 0.3)',
+      gradient: 'from-sky-400 to-blue-600',
+      glowColor: 'rgba(56, 189, 248, 0.25)',
       hotkey: '⌘T',
     },
     {
@@ -62,8 +62,8 @@ export default function BottomNav({ username }: { username: string }) {
       icon: MessageSquare,
       label: 'New Chat',
       desc: 'Quick conversation',
-      gradient: 'from-sky-400 to-blue-600',
-      glowColor: 'rgba(56, 189, 248, 0.3)',
+      gradient: 'from-cyan-400 to-teal-500',
+      glowColor: 'rgba(6, 182, 212, 0.25)',
     },
   ]
 
@@ -83,7 +83,7 @@ export default function BottomNav({ username }: { username: string }) {
         {/* Garis dekoratif atas nav */}
         <div className="mx-6">
           <motion.div
-            className="h-px bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent"
+            className="h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"
             initial={{ scaleX: 0, opacity: 0 }}
             animate={{ scaleX: 1, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
@@ -91,11 +91,12 @@ export default function BottomNav({ username }: { username: string }) {
         </div>
 
         <div className="mx-3 mb-3 mt-2">
-          <div className="relative bg-gray-950/70 backdrop-blur-3xl border border-white/[0.08] rounded-3xl shadow-2xl shadow-black/60 px-1 py-2">
-            {/* Ambient light effect */}
+          <div className="relative bg-gray-950/80 backdrop-blur-3xl border border-white/[0.06] rounded-3xl shadow-2xl shadow-black/60 px-1 py-2">
+            {/* Ambient light effects - DEEP OCEAN */}
             <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
-              <div className="absolute -top-20 -left-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
-              <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl" />
+              <div className="absolute -top-20 -left-20 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl" />
+              <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-sky-500/5 rounded-full blur-3xl" />
             </div>
 
             {/* Inner gradient */}
@@ -117,7 +118,7 @@ export default function BottomNav({ username }: { username: string }) {
                       {isActive && (
                         <motion.div
                           layoutId="bottomNavPill"
-                          className="absolute inset-0 bg-emerald-500/20 rounded-2xl border border-emerald-500/20"
+                          className="absolute inset-0 bg-blue-500/15 rounded-2xl border border-blue-500/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                           transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
                         />
                       )}
@@ -133,7 +134,7 @@ export default function BottomNav({ username }: { username: string }) {
                           strokeWidth={isActive ? 2.5 : 1.75}
                           className={`relative z-10 transition-all duration-300 ${
                             isActive
-                              ? 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.6)]'
+                              ? 'text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]'
                               : 'text-gray-500 group-hover:text-gray-300'
                           }`}
                         />
@@ -146,7 +147,7 @@ export default function BottomNav({ username }: { username: string }) {
                               animate={{ scale: 2.5, opacity: 0 }}
                               exit={{ opacity: 0 }}
                               transition={{ duration: 0.5, ease: 'easeOut' }}
-                              className="absolute inset-0 -z-0 rounded-full bg-emerald-400/30"
+                              className="absolute inset-0 -z-0 rounded-full bg-cyan-400/25"
                             />
                           )}
                         </AnimatePresence>
@@ -155,7 +156,9 @@ export default function BottomNav({ username }: { username: string }) {
                       {/* Label */}
                       <motion.span
                         className={`text-[10px] font-semibold relative z-10 transition-all duration-300 ${
-                          isActive ? 'text-emerald-400 scale-110' : 'text-gray-500 group-hover:text-gray-400'
+                          isActive
+                            ? 'text-cyan-400 scale-110'
+                            : 'text-gray-500 group-hover:text-gray-400'
                         }`}
                       >
                         {tab.label}
@@ -178,17 +181,17 @@ export default function BottomNav({ username }: { username: string }) {
                     repeat: Infinity,
                     ease: 'easeInOut',
                   }}
-                  className="absolute inset-0 rounded-2xl bg-emerald-400/20"
+                  className="absolute inset-0 rounded-2xl bg-cyan-400/15"
                 />
 
                 <motion.button
                   whileTap={{ scale: 0.85 }}
                   whileHover={{ scale: 1.05 }}
                   onClick={() => setShowCreate(!showCreate)}
-                  className="relative w-[52px] h-[52px] bg-gradient-to-br from-emerald-400 via-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(52,211,153,0.4),0_10px_30px_rgba(0,0,0,0.5)] border-2 border-white/20 overflow-hidden group"
+                  className="relative w-[52px] h-[52px] bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.35),0_10px_30px_rgba(0,0,0,0.5)] border-2 border-white/15 overflow-hidden group"
                 >
                   {/* Shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/15 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
 
                   <motion.div
                     animate={{ rotate: showCreate ? 135 : 0 }}
@@ -217,7 +220,7 @@ export default function BottomNav({ username }: { username: string }) {
                       {isActive && (
                         <motion.div
                           layoutId="bottomNavPill"
-                          className="absolute inset-0 bg-emerald-500/20 rounded-2xl border border-emerald-500/20"
+                          className="absolute inset-0 bg-blue-500/15 rounded-2xl border border-blue-500/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                           transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
                         />
                       )}
@@ -228,7 +231,7 @@ export default function BottomNav({ username }: { username: string }) {
                           strokeWidth={isActive ? 2.5 : 1.75}
                           className={`relative z-10 transition-all duration-300 ${
                             isActive
-                              ? 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.6)]'
+                              ? 'text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]'
                               : 'text-gray-500 group-hover:text-gray-300'
                           }`}
                         />
@@ -239,7 +242,7 @@ export default function BottomNav({ username }: { username: string }) {
                               animate={{ scale: 2.5, opacity: 0 }}
                               exit={{ opacity: 0 }}
                               transition={{ duration: 0.5, ease: 'easeOut' }}
-                              className="absolute inset-0 -z-0 rounded-full bg-emerald-400/30"
+                              className="absolute inset-0 -z-0 rounded-full bg-cyan-400/25"
                             />
                           )}
                         </AnimatePresence>
@@ -247,7 +250,9 @@ export default function BottomNav({ username }: { username: string }) {
 
                       <motion.span
                         className={`text-[10px] font-semibold relative z-10 transition-all duration-300 ${
-                          isActive ? 'text-emerald-400 scale-110' : 'text-gray-500 group-hover:text-gray-400'
+                          isActive
+                            ? 'text-cyan-400 scale-110'
+                            : 'text-gray-500 group-hover:text-gray-400'
                         }`}
                       >
                         {tab.label}
@@ -272,10 +277,14 @@ export default function BottomNav({ username }: { username: string }) {
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
             className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[calc(100vw-2rem)] max-w-[340px]"
           >
-            <div className="bg-gray-950/90 backdrop-blur-2xl border border-white/[0.1] rounded-3xl p-4 shadow-[0_20px_60px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05)] overflow-hidden">
+            <div className="bg-gray-950/95 backdrop-blur-2xl border border-white/[0.08] rounded-3xl p-4 shadow-[0_20px_60px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.03)] overflow-hidden">
+              {/* Ambient popup */}
+              <div className="absolute -top-10 -left-10 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
               {/* Header */}
-              <div className="flex items-center gap-3 mb-3 px-1">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <div className="relative flex items-center gap-3 mb-3 px-1">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
                   <Zap size={16} className="text-white" />
                 </div>
                 <div>
@@ -285,13 +294,13 @@ export default function BottomNav({ username }: { username: string }) {
               </div>
 
               {/* Options */}
-              <div className="space-y-1.5">
+              <div className="relative space-y-1.5">
                 {createOptions.map((option) => (
                   <Link
                     key={option.href}
                     href={option.href}
                     onClick={() => setShowCreate(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-2xl hover:bg-white/[0.06] transition-all group/item relative overflow-hidden border border-transparent hover:border-white/[0.08]"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-2xl hover:bg-white/[0.05] transition-all group/item relative overflow-hidden border border-transparent hover:border-white/[0.06]"
                   >
                     {/* Hover gradient glow */}
                     <div
@@ -314,7 +323,7 @@ export default function BottomNav({ username }: { username: string }) {
 
                     {/* Hotkey badge */}
                     {option.hotkey && (
-                      <kbd className="relative z-10 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white/[0.06] border border-white/[0.08] text-[10px] text-gray-400 font-mono">
+                      <kbd className="relative z-10 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[10px] text-gray-400 font-mono">
                         {option.hotkey}
                       </kbd>
                     )}
@@ -330,7 +339,7 @@ export default function BottomNav({ username }: { username: string }) {
                           strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          className="text-gray-400"
+                          className="text-cyan-400"
                         />
                       </svg>
                     </motion.div>
@@ -343,7 +352,7 @@ export default function BottomNav({ username }: { username: string }) {
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
               <svg width="20" height="10" viewBox="0 0 20 10">
                 <polygon points="10,10 0,0 20,0" className="fill-gray-950" />
-                <polygon points="10,10 1,0 19,0" className="fill-white/[0.1]" />
+                <polygon points="10,10 1,0 19,0" className="fill-white/[0.08]" />
               </svg>
             </div>
           </motion.div>
