@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import DashboardNav from '@/app/dashboard/nav'
+import DashboardNav from '@/components/DashboardNav'
 
 export default async function UsernameLayout({
   children,
@@ -50,7 +50,7 @@ export default async function UsernameLayout({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
-      <DashboardNav user={{ user_metadata: { username: profile.username } }} username={profile.username} />
+      <DashboardNav username={profile.username} />
       <div className="lg:pl-72">
         <main className="p-4 lg:p-8 min-h-screen">
           {children}
