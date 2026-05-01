@@ -10,13 +10,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Username dan password wajib diisi' }, { status: 400 })
   }
 
-  const supabase = createClient(
+  const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
-  const { data: profile } = await supabase
+  const { data: profile } = await supabaseAdmin
     .from('profiles')
     .select('id, username, password_hash, phone_number, email')
     .eq('username', username.toLowerCase().trim())
@@ -34,53 +34,51 @@ export async function POST(request: Request) {
 
   const email = profile.email || `${profile.username}@asuma.local`
 
-  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+  const { data: existingUser } = await supabaseAdmin.auth.admin.getUserById(profile.id)
+
+  if (!existingUser?.user) {
+    await supabaseAdmin.auth.admin.createUser({
+      id: profile.id,
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { username: profile.username, phone_number: profile.phone_number },
+    })
+  } else {
+    await supabaseAdmin.auth.admin.updateUserById(profile.id, { password })
+  }
+
+  const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
     email,
     password,
   })
 
-  if (signInError) {
-    const newPassword = password + '_auth'
-    
-    try {
-      const { data: existingUser } = await supabase.auth.admin.getUserById(profile.id)
-      
-      if (!existingUser?.user) {
-        await supabase.auth.admin.createUser({
-          id: profile.id,
-          email,
-          password: newPassword,
-          email_confirm: true,
-          user_metadata: { username: profile.username, phone_number: profile.phone_number },
-        })
-      } else {
-        await supabase.auth.admin.updateUserById(profile.id, { password: newPassword })
-      }
-
-      const { data: retrySignIn } = await supabase.auth.signInWithPassword({
-        email,
-        password: newPassword,
-      })
-
-      if (retrySignIn?.session) {
-        return NextResponse.json({
-          success: true,
-          username: profile.username,
-          access_token: retrySignIn.session.access_token,
-          refresh_token: retrySignIn.session.refresh_token,
-        })
-      }
-    } catch (e) {
-      console.error('Auth fix error:', e)
-    }
-    
-    return NextResponse.json({ error: 'Gagal membuat sesi' }, { status: 500 })
+  if (signInError || !signInData?.session) {
+    console.error('Sign in error:', signInError)
+    return NextResponse.json({ error: 'Gagal login ke Supabase Auth' }, { status: 500 })
   }
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     success: true,
     username: profile.username,
-    access_token: signInData.session.access_token,
-    refresh_token: signInData.session.refresh_token,
+    redirect: `/${profile.username}`,
   })
+
+  response.cookies.set('sb-access-token', signInData.session.access_token, {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60,
+  })
+
+  response.cookies.set('sb-refresh-token', signInData.session.refresh_token, {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+  })
+
+  return response
 }
