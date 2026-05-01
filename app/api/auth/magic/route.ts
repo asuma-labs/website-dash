@@ -23,11 +23,11 @@ export async function POST(request: Request) {
   }
 
   if (magicToken.used) {
-    return NextResponse.json({ error: 'Token sudah digunakan' }, { status: 401 })
+    return NextResponse.json({ error: 'Token sudah digunakan. Silakan minta link baru.' }, { status: 401 })
   }
 
   if (new Date(magicToken.expires_at) < new Date()) {
-    return NextResponse.json({ error: 'Token kadaluarsa' }, { status: 401 })
+    return NextResponse.json({ error: 'Token kadaluarsa. Silakan minta link baru.' }, { status: 401 })
   }
 
   const { data: profile } = await supabase
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
 
   await supabase.from('magic_tokens').update({ used: true }).eq('token', token)
 
+  const email = profile.email || `${profile.username}@asuma.local`
   const password = crypto.randomUUID()
 
   const { data: existingUser } = await supabase.auth.admin.getUserById(profile.id)
@@ -49,23 +50,33 @@ export async function POST(request: Request) {
   if (!existingUser?.user) {
     const { error: createError } = await supabase.auth.admin.createUser({
       id: profile.id,
-      email: profile.email || `${profile.username}@asuma.local`,
+      email,
       password,
       email_confirm: true,
       user_metadata: { username: profile.username, phone_number: profile.phone_number },
     })
 
     if (createError) {
-      return NextResponse.json({ error: 'Gagal membuat user' }, { status: 500 })
+      console.error('Create auth user error:', createError)
+      return NextResponse.json({ error: 'Gagal membuat sesi' }, { status: 500 })
+    }
+  } else {
+    const { error: updateError } = await supabase.auth.admin.updateUserById(profile.id, {
+      password,
+    })
+
+    if (updateError) {
+      console.error('Update auth user error:', updateError)
     }
   }
 
   const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-    email: profile.email || `${profile.username}@asuma.local`,
+    email,
     password,
   })
 
   if (signInError || !signInData?.session) {
+    console.error('Sign in error:', signInError)
     return NextResponse.json({ error: 'Gagal login' }, { status: 500 })
   }
 
