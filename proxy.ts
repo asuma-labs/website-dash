@@ -25,13 +25,28 @@ export async function middleware(request: NextRequest) {
   )
 
   const { data: { session } } = await supabase.auth.getSession()
+  const pathname = request.nextUrl.pathname
 
-  if (!session && request.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (pathname === '/login' && session) {
+    const username = session.user.user_metadata?.username
+    if (username) return NextResponse.redirect(new URL(`/${username}`, request.url))
   }
 
-  if (session && request.nextUrl.pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  if (pathname.startsWith('/auth/magic') || pathname.startsWith('/api/auth/register')) {
+    return supabaseResponse
+  }
+
+  const dashboardPattern = /^\/([a-z0-9_-]+)(\/.*)?$/
+  const match = pathname.match(dashboardPattern)
+
+  if (match && match[1] !== 'api' && match[1] !== 'auth' && match[1] !== '_next' && match[1] !== 'favicon.ico') {
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    const sessionUsername = session.user.user_metadata?.username
+    if (sessionUsername !== match[1]) {
+      return NextResponse.redirect(new URL(`/${sessionUsername}`, request.url))
+    }
   }
 
   return supabaseResponse
