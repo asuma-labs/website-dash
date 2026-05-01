@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, username, email')
+    .select('id, username, email, phone_number')
     .eq('id', magicToken.user_id)
     .single()
 
@@ -42,34 +42,37 @@ export async function POST(request: Request) {
 
   await supabase.from('magic_tokens').update({ used: true }).eq('token', token)
 
-  const { data: authUser, error: signInError } = await supabase.auth.admin.createUser({
-    email: profile.email || `${profile.username}@asuma.local`,
-    password: crypto.randomUUID(),
-    email_confirm: true,
-    user_metadata: { username: profile.username, phone_number: profile.phone_number },
-  })
+  const password = crypto.randomUUID()
 
-  if (signInError) {
-    const { data: signInData, error: signInError2 } = await supabase.auth.signInWithPassword({
+  const { data: existingUser } = await supabase.auth.admin.getUserById(profile.id)
+
+  if (!existingUser?.user) {
+    const { error: createError } = await supabase.auth.admin.createUser({
+      id: profile.id,
       email: profile.email || `${profile.username}@asuma.local`,
-      password: 'temporary', 
+      password,
+      email_confirm: true,
+      user_metadata: { username: profile.username, phone_number: profile.phone_number },
     })
+
+    if (createError) {
+      return NextResponse.json({ error: 'Gagal membuat user' }, { status: 500 })
+    }
   }
 
-  const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-    type: 'magiclink',
+  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
     email: profile.email || `${profile.username}@asuma.local`,
+    password,
   })
 
-  const { data: finalSession, error: finalError } = await supabase.auth.signInWithPassword({
-    email: profile.email || `${profile.username}@asuma.local`,
-    password: 'temporary',
-  })
+  if (signInError || !signInData?.session) {
+    return NextResponse.json({ error: 'Gagal login' }, { status: 500 })
+  }
 
   return NextResponse.json({
     success: true,
     username: profile.username,
-    access_token: sessionData?.properties?.access_token || '',
-    refresh_token: sessionData?.properties?.refresh_token || '',
+    access_token: signInData.session.access_token,
+    refresh_token: signInData.session.refresh_token,
   })
 }
