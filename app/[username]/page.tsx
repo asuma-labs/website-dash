@@ -1,7 +1,5 @@
 // app/[username]/page.tsx
 import { createServerSupabase } from '@/lib/supabase/server'
-import Link from 'next/link'
-import { Zap, Bot, Activity, TrendingUp, Plus, ArrowRight, Sparkles } from 'lucide-react'
 import DashboardContent from '@/components/DashboardContent'
 
 export default async function DashboardPage({ params }: { params: Promise<{ username: string }> }) {
