@@ -27,24 +27,40 @@ export default async function proxy(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
   const pathname = request.nextUrl.pathname
 
-  if (pathname === '/login' && session) {
-    const username = session.user.user_metadata?.username
-    if (username) return NextResponse.redirect(new URL(`/${username}`, request.url))
+  const publicPaths = ['/login', '/', '/auth/magic']
+  const isPublicPath = publicPaths.some(p => pathname === p || pathname.startsWith(p))
+  const isApiPath = pathname.startsWith('/api/')
+  const isStaticPath = pathname.startsWith('/_next') || pathname.startsWith('/favicon.ico')
+
+  if (isApiPath || isStaticPath) {
+    return supabaseResponse
   }
 
-  if (pathname.startsWith('/auth/magic') || pathname.startsWith('/api/auth/register')) {
+  if (pathname === '/login' && session) {
+    const username = session.user.user_metadata?.username
+    if (username && pathname !== `/${username}`) {
+      return NextResponse.redirect(new URL(`/${username}`, request.url))
+    }
     return supabaseResponse
   }
 
   const dashboardPattern = /^\/([a-z0-9_-]+)(\/.*)?$/
   const match = pathname.match(dashboardPattern)
 
-  if (match && match[1] !== 'api' && match[1] !== 'auth' && match[1] !== '_next' && match[1] !== 'favicon.ico') {
-    if (!session) {
-      return NextResponse.redirect(new URL('/login', request.url))
+  if (match) {
+    const username = match[1]
+    if (username === 'api' || username === 'auth' || username === '_next' || username === 'favicon.ico') {
+      return supabaseResponse
     }
+    
+    if (!session) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
     const sessionUsername = session.user.user_metadata?.username
-    if (sessionUsername !== match[1]) {
+    if (sessionUsername && sessionUsername !== username) {
       return NextResponse.redirect(new URL(`/${sessionUsername}`, request.url))
     }
   }
@@ -53,5 +69,5 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }
