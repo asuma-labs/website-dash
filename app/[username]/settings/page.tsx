@@ -1,97 +1,51 @@
 // app/[username]/settings/page.tsx
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { User, Shield, Key, Bell, Palette, ChevronRight, Copy, Check, Moon, Sun } from 'lucide-react'
-
-type SettingItem = {
-  label: string
-  value?: string
-  action: 'copy' | 'navigate' | 'toggle'
-  href?: string
-  toggleValue?: boolean
-  onChange?: () => void
-}
-
-type SettingSection = {
-  title: string
-  icon: any
-  items: SettingItem[]
-}
+import { User, Shield, Bell, Palette, ChevronRight, Copy, Check } from 'lucide-react'
 
 export default function SettingsPage() {
   const { username } = useParams() as { username: string }
-  const supabase = createClient()
-  const [profile, setProfile] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState<string | null>(null)
   const [darkMode, setDarkMode] = useState(true)
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-          .then(({ data }) => {
-            setProfile(data)
-            setLoading(false)
-          })
-      }
-    })
-  }, [])
-
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string, label: string) => {
     await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopied(label)
+    setTimeout(() => setCopied(null), 2000)
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  const settingsSections: SettingSection[] = [
+  const settingsSections = [
     {
       title: 'Akun',
       icon: User,
       items: [
-        { label: 'Username', value: `@${profile?.username}`, action: 'copy' },
-        { label: 'Nomor WhatsApp', value: profile?.phone_number, action: 'copy' },
-        { label: 'ID User', value: profile?.id, action: 'copy' },
-        { label: 'Email', value: profile?.email || `${profile?.username}@asuma.local`, action: 'copy' },
+        { label: 'Username', value: `@${username}`, copyValue: username },
+        { label: 'Dashboard URL', value: `dash.asuma.my.id/${username}`, copyValue: `https://dash.asuma.my.id/${username}` },
       ],
     },
     {
       title: 'Keamanan',
       icon: Shield,
       items: [
-        { label: 'Ganti Password', action: 'navigate', href: `/${username}/settings/password` },
-        { label: 'Session Aktif', action: 'navigate', href: `/${username}/settings/sessions` },
+        { label: 'Ganti Password', action: 'navigate' as const, href: `/${username}/settings/password` },
       ],
     },
     {
       title: 'Notifikasi',
       icon: Bell,
       items: [
-        { label: 'Push Notification', action: 'toggle', toggleValue: true },
-        { label: 'Email Notification', action: 'toggle', toggleValue: false },
+        { label: 'Bot Connected', action: 'toggle' as const, toggleValue: true },
+        { label: 'Bot Disconnected', action: 'toggle' as const, toggleValue: false },
       ],
     },
     {
       title: 'Tampilan',
       icon: Palette,
       items: [
-        { label: 'Dark Mode', action: 'toggle', toggleValue: darkMode, onChange: () => setDarkMode(!darkMode) },
+        { label: 'Dark Mode', action: 'toggle' as const, toggleValue: darkMode, onChange: () => setDarkMode(!darkMode) },
       ],
     },
   ]
@@ -132,17 +86,17 @@ export default function SettingsPage() {
               >
                 <div>
                   <p className="text-sm font-medium">{item.label}</p>
-                  {item.value && (
+                  {'value' in item && (
                     <p className="text-xs text-gray-500 mt-0.5 font-mono truncate max-w-[200px]">{item.value}</p>
                   )}
                 </div>
 
-                {item.action === 'copy' && item.value && (
+                {'copyValue' in item && (
                   <button
-                    onClick={() => copyToClipboard(item.value!)}
+                    onClick={() => copyToClipboard(item.copyValue!, item.label)}
                     className="flex items-center gap-2 text-xs text-gray-400 hover:text-emerald-400 transition"
                   >
-                    {copied ? (
+                    {copied === item.label ? (
                       <>
                         <Check size={14} className="text-emerald-400" />
                         <span className="text-emerald-400">Copied!</span>
@@ -156,15 +110,15 @@ export default function SettingsPage() {
                   </button>
                 )}
 
-                {item.action === 'navigate' && item.href && (
+                {item.action === 'navigate' && 'href' in item && (
                   <a href={item.href} className="text-gray-400 hover:text-emerald-400 transition">
                     <ChevronRight size={18} />
                   </a>
                 )}
 
-                {item.action === 'toggle' && (
+                {item.action === 'toggle' && 'toggleValue' in item && (
                   <button
-                    onClick={item.onChange}
+                    onClick={'onChange' in item ? item.onChange : undefined}
                     className={`w-12 h-7 rounded-full transition relative ${
                       item.toggleValue ? 'bg-emerald-500' : 'bg-gray-600'
                     }`}
