@@ -32,10 +32,16 @@ function LoginForm() {
       return
     }
 
-    await supabase.auth.setSession({
+    const { error: sessionError } = await supabase.auth.setSession({
       access_token: data.access_token,
       refresh_token: data.refresh_token,
     })
+
+    if (sessionError) {
+      setError('Gagal menyimpan sesi')
+      setLoading(false)
+      return
+    }
 
     router.push(`/${data.username}`)
   }
@@ -85,10 +91,6 @@ function LoginForm() {
             {loading ? 'Loading...' : 'Login'}
           </button>
         </form>
-
-        <p className="text-gray-500 text-sm text-center mt-6">
-          Belum punya akun? Kirim <code className="text-green-400">.daftar username password</code> ke bot
-        </p>
       </div>
     </div>
   )
