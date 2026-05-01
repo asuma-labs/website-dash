@@ -11,10 +11,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Semua field wajib diisi' }, { status: 400 })
   }
 
-  if (typeof username !== 'string' || typeof password !== 'string') {
-    return NextResponse.json({ error: 'Format tidak valid' }, { status: 400 })
-  }
-
   const trimmedUsername = username.toLowerCase().trim()
   const trimmedPhone = phone_number.replace(/[^0-9]/g, '')
 
@@ -31,15 +27,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Password minimal 6 karakter' }, { status: 400 })
   }
 
-  if (trimmedPhone.length < 10 || trimmedPhone.length > 15) {
-    return NextResponse.json({ error: 'Nomor telepon tidak valid' }, { status: 400 })
-  }
-
-  const bannedWords = ['admin', 'root', 'bot', 'system', 'mod', 'owner', 'asuma', 'official', 'staff', 'ceo', 'founder']
-  if (bannedWords.some(word => trimmedUsername.includes(word))) {
-    return NextResponse.json({ error: 'Username mengandung kata terlarang' }, { status: 400 })
-  }
-
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -54,45 +41,53 @@ export async function POST(request: Request) {
 
   if (existingUser) {
     if (existingUser.username === trimmedUsername) {
-      return NextResponse.json({ error: '❌ Username sudah digunakan. Silakan pilih username lain.' }, { status: 409 })
+      return NextResponse.json({ error: 'Username sudah digunakan' }, { status: 409 })
     }
     if (existingUser.phone_number === trimmedPhone) {
-      return NextResponse.json({ error: '❌ Nomor WhatsApp ini sudah terdaftar. Gunakan .login untuk masuk.' }, { status: 409 })
+      return NextResponse.json({ error: 'Nomor sudah terdaftar' }, { status: 409 })
     }
   }
 
   const password_hash = await bcrypt.hash(password, 10)
+  const email = `${trimmedUsername}@asuma.local`
+  const userId = crypto.randomUUID()
 
-  const { data: profile, error: profileError } = await supabase
+  const { error: authError } = await supabase.auth.admin.createUser({
+    id: userId,
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { username: trimmedUsername, phone_number: trimmedPhone },
+  })
+
+  if (authError) {
+    console.error('Auth create error:', authError)
+    return NextResponse.json({ error: 'Gagal membuat akun' }, { status: 500 })
+  }
+
+  const { error: profileError } = await supabase
     .from('profiles')
     .insert({
+      id: userId,
       username: trimmedUsername,
       password_hash,
       phone_number: trimmedPhone,
-      email: `${trimmedUsername}@asuma.local`,
+      email,
     })
-    .select('id')
-    .single()
 
-  if (profileError || !profile) {
+  if (profileError) {
     console.error('Profile insert error:', profileError)
-    return NextResponse.json({ error: 'Gagal membuat akun. Coba lagi nanti.' }, { status: 500 })
+    await supabase.auth.admin.deleteUser(userId)
+    return NextResponse.json({ error: 'Gagal menyimpan profil' }, { status: 500 })
   }
 
   const magicToken = crypto.randomBytes(32).toString('hex')
 
-  const { error: tokenError } = await supabase
-    .from('magic_tokens')
-    .insert({
-      user_id: profile.id,
-      token: magicToken,
-      expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-    })
-
-  if (tokenError) {
-    console.error('Token insert error:', tokenError)
-    return NextResponse.json({ error: 'Gagal generate token' }, { status: 500 })
-  }
+  await supabase.from('magic_tokens').insert({
+    user_id: userId,
+    token: magicToken,
+    expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+  })
 
   const magicLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/magic?token=${magicToken}`
 
