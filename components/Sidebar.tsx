@@ -30,10 +30,10 @@ export default function Sidebar({ username }: { username: string }) {
     }
   }, [mobileOpen])
 
-  const signOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
+const signOut = async () => {
+  await fetch('/api/auth/logout', { method: 'POST' })
+  router.push('/login')
+}
 
   const mainLinks = [
     {
