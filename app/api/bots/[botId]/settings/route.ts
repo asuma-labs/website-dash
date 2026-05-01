@@ -2,7 +2,8 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-export async function PATCH(request: Request, { params }: { params: { botId: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ botId: string }> }) {
+  const { botId } = await params
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -11,7 +12,7 @@ export async function PATCH(request: Request, { params }: { params: { botId: str
   const { data: bot } = await supabase
     .from('bot_instances')
     .select('user_id')
-    .eq('id', params.botId)
+    .eq('id', botId)
     .single()
 
   if (!bot || bot.user_id !== user.id) {
@@ -22,7 +23,7 @@ export async function PATCH(request: Request, { params }: { params: { botId: str
 
   const { data: settings, error } = await supabase
     .from('bot_settings')
-    .upsert({ bot_instance_id: params.botId, ...body, updated_at: new Date().toISOString() })
+    .upsert({ bot_instance_id: botId, ...body, updated_at: new Date().toISOString() })
     .select()
     .single()
 
@@ -31,7 +32,7 @@ export async function PATCH(request: Request, { params }: { params: { botId: str
   }
 
   await supabase.from('tasks').insert({
-    bot_instance_id: params.botId,
+    bot_instance_id: botId,
     type: 'update_settings',
     payload: body,
     status: 'pending',
