@@ -46,10 +46,10 @@ export default function ProfilePage() {
     }
   }
 
-  const signOut = async () => {
-    document.cookie = 'auth_token=; path=/; max-age=0'
-    router.push('/login')
-  }
+const signOut = async () => {
+  await fetch('/api/auth/logout', { method: 'POST' })
+  router.push('/login')
+}
 
   const saveProfile = async () => {
     setSaving(true)
