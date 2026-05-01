@@ -31,7 +31,6 @@ export async function POST(request: Request) {
   const { phone_number, bot_name } = await request.json()
   if (!phone_number) return NextResponse.json({ error: 'Nomor wajib diisi' }, { status: 400 })
 
-  // Cek existing bot
   const { data: existing } = await supabase
     .from('bot_instances')
     .select('id, status')
@@ -39,16 +38,13 @@ export async function POST(request: Request) {
     .eq('phone_number', phone_number)
     .single()
 
-  // Kalo ada dan statusnya failed/stopped/logged_out, reuse aja
   if (existing) {
     if (['failed', 'stopped', 'logged_out', 'expired'].includes(existing.status)) {
-      // Reset status bot lama
       await supabase
         .from('bot_instances')
         .update({ status: 'pending', pairing_code: null, updated_at: new Date().toISOString() })
         .eq('id', existing.id)
 
-      // Bikin pairing queue baru
       await supabase.from('pairing_queue').insert({
         bot_instance_id: existing.id,
         phone_number,
@@ -68,7 +64,6 @@ export async function POST(request: Request) {
     }
   }
 
-  // Bikin bot baru
   const { data: bot, error } = await supabase
     .from('bot_instances')
     .insert({
@@ -84,7 +79,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Gagal membuat bot' }, { status: 500 })
   }
 
-  await supabase.from('bot_settings').insert({ bot_instance_id: bot.id }).select().single().catch(() => {})
+  const { error: settingsError } = await supabase
+    .from('bot_settings')
+    .insert({ bot_instance_id: bot.id })
+
+  if (settingsError) {
+    console.error('Settings insert error:', settingsError)
+  }
 
   await supabase.from('pairing_queue').insert({
     bot_instance_id: bot.id,
