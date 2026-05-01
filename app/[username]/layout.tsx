@@ -50,10 +50,18 @@ export default async function UsernameLayout({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
+      <div className="fixed inset-0 bg-[url('/icons/android-chrome-192x192.png')] bg-fixed opacity-[0.02] pointer-events-none" />
       <DashboardNav username={profile.username} />
-      <div className="lg:pl-72">
-        <main className="p-4 lg:p-8 min-h-screen">
-          {children}
+      <div className="lg:ml-72 min-h-screen">
+        <div className="fixed top-0 left-72 right-0 h-32 bg-gradient-to-b from-gray-950/80 to-transparent pointer-events-none z-30" />
+        <main className="relative p-4 pt-20 lg:p-8 lg:pt-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          >
+            {children}
+          </motion.div>
         </main>
       </div>
     </div>
