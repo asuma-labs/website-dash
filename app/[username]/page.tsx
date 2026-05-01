@@ -1,4 +1,4 @@
-// app/[username]/page.tsx l
+// app/[username]/page.tsx
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
@@ -15,15 +15,33 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase
+    fetchBots()
+
+    const channel = supabase
+      .channel('dashboard-bots')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bot_instances' },
+        () => {
+          fetchBots()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  const fetchBots = async () => {
+    const { data } = await supabase
       .from('bot_instances')
       .select('*')
       .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setBots(data || [])
-        setLoading(false)
-      })
-  }, [])
+
+    setBots(data || [])
+    setLoading(false)
+  }
 
   const activeBots = bots.filter(b => b.status === 'connected').length
   const pairingBots = bots.filter(b => b.status === 'pairing_code').length
@@ -97,9 +115,10 @@ export default function DashboardPage() {
               </div>
             </div>
             <motion.p
+              key={value}
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+              transition={{ type: 'spring', stiffness: 200 }}
               className="text-5xl font-bold"
             >
               {value}
