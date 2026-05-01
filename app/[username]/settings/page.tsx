@@ -6,6 +6,18 @@ import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { User, Shield, Bell, Palette, ChevronRight, Copy, Check } from 'lucide-react'
 
+// Fix TypeScript: definisikan tipe untuk setiap aksi
+type SettingItem = 
+  | { label: string; value: string; copyValue: string; type: 'copy' }
+  | { label: string; type: 'navigate'; href: string }
+  | { label: string; type: 'toggle'; toggleValue: boolean; onChange?: () => void }
+
+type SettingSection = {
+  title: string
+  icon: any
+  items: SettingItem[]
+}
+
 export default function SettingsPage() {
   const { username } = useParams() as { username: string }
   const [copied, setCopied] = useState<string | null>(null)
@@ -17,35 +29,35 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(null), 2000)
   }
 
-  const settingsSections = [
+  const settingsSections: SettingSection[] = [
     {
       title: 'Akun',
       icon: User,
       items: [
-        { label: 'Username', value: `@${username}`, copyValue: username },
-        { label: 'Dashboard URL', value: `dash.asuma.my.id/${username}`, copyValue: `https://dash.asuma.my.id/${username}` },
+        { label: 'Username', value: `@${username}`, copyValue: username, type: 'copy' },
+        { label: 'Dashboard URL', value: `dash.asuma.my.id/${username}`, copyValue: `https://dash.asuma.my.id/${username}`, type: 'copy' },
       ],
     },
     {
       title: 'Keamanan',
       icon: Shield,
       items: [
-        { label: 'Ganti Password', action: 'navigate' as const, href: `/${username}/settings/password` },
+        { label: 'Ganti Password', type: 'navigate', href: `/${username}/settings/password` },
       ],
     },
     {
       title: 'Notifikasi',
       icon: Bell,
       items: [
-        { label: 'Bot Connected', action: 'toggle' as const, toggleValue: true },
-        { label: 'Bot Disconnected', action: 'toggle' as const, toggleValue: false },
+        { label: 'Bot Connected', type: 'toggle', toggleValue: true },
+        { label: 'Bot Disconnected', type: 'toggle', toggleValue: false },
       ],
     },
     {
       title: 'Tampilan',
       icon: Palette,
       items: [
-        { label: 'Dark Mode', action: 'toggle' as const, toggleValue: darkMode, onChange: () => setDarkMode(!darkMode) },
+        { label: 'Dark Mode', type: 'toggle', toggleValue: darkMode, onChange: () => setDarkMode(!darkMode) },
       ],
     },
   ]
@@ -86,12 +98,12 @@ export default function SettingsPage() {
               >
                 <div>
                   <p className="text-sm font-medium">{item.label}</p>
-                  {'value' in item && (
+                  {item.type === 'copy' && (
                     <p className="text-xs text-gray-500 mt-0.5 font-mono truncate max-w-[200px]">{item.value}</p>
                   )}
                 </div>
 
-                {'copyValue' in item && (
+                {item.type === 'copy' && (
                   <button
                     onClick={() => copyToClipboard(item.copyValue!, item.label)}
                     className="flex items-center gap-2 text-xs text-gray-400 hover:text-emerald-400 transition"
@@ -110,15 +122,15 @@ export default function SettingsPage() {
                   </button>
                 )}
 
-                {item.action === 'navigate' && 'href' in item && (
+                {item.type === 'navigate' && (
                   <a href={item.href} className="text-gray-400 hover:text-emerald-400 transition">
                     <ChevronRight size={18} />
                   </a>
                 )}
 
-                {item.action === 'toggle' && 'toggleValue' in item && (
+                {item.type === 'toggle' && (
                   <button
-                    onClick={'onChange' in item ? item.onChange : undefined}
+                    onClick={item.onChange}
                     className={`w-12 h-7 rounded-full transition relative ${
                       item.toggleValue ? 'bg-emerald-500' : 'bg-gray-600'
                     }`}
