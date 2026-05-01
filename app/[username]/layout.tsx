@@ -16,11 +16,13 @@ export default async function UsernameLayout({
 
   if (!session) {
     redirect(`/login?redirect=/${username}`)
+    return null
   }
 
   const sessionUsername = session.user.user_metadata?.username
   if (sessionUsername !== username) {
     redirect(`/${sessionUsername}`)
+    return null
   }
 
   return (
