@@ -12,7 +12,7 @@ export default function NewBotPage() {
   const { username } = useParams() as { username: string }
   const router = useRouter()
   const supabase = createClient()
-  
+
   const [phone, setPhone] = useState('')
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -22,19 +22,25 @@ export default function NewBotPage() {
   const [copied, setCopied] = useState(false)
   const [timeLeft, setTimeLeft] = useState(60)
   const [statusText, setStatusText] = useState('')
-  
+
   const channelRef = useRef<any>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const pollRef = useRef<NodeJS.Timeout | null>(null)
+  const isSubscribed = useRef(false)
 
   useEffect(() => {
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current)
       if (timerRef.current) clearInterval(timerRef.current)
+      if (pollRef.current) clearInterval(pollRef.current)
     }
   }, [])
 
   const subscribeToBot = (id: string) => {
-    if (channelRef.current) supabase.removeChannel(channelRef.current)
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current)
+    }
+    isSubscribed.current = false
 
     channelRef.current = supabase
       .channel('bot-updates-' + id)
@@ -48,36 +54,67 @@ export default function NewBotPage() {
         },
         (payload: any) => {
           const bot = payload.new
-
-          if (bot.status === 'pairing_code' && bot.pairing_code) {
-            setPairingCode(bot.pairing_code)
-            setLoading(false)
-            setStatusText('Kode pairing siap!')
-            startCountdown()
-          }
-
-          if (bot.status === 'processing') {
-            setStatusText('Sedang menyiapkan kode pairing...')
-          }
-
-          if (bot.status === 'connected') {
-            setStatusText('Bot terhubung!')
-            setTimeout(() => router.push(`/${username}/bots/${id}`), 1500)
-          }
-
-          if (bot.status === 'failed') {
-            setError('Gagal membuat pairing. Silakan coba lagi.')
-            setLoading(false)
-          }
+          handleBotUpdate(bot)
         }
       )
-      .subscribe()
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribed.current = true
+        }
+      })
+  }
+
+  const startPolling = (id: string) => {
+    if (pollRef.current) clearInterval(pollRef.current)
+
+    pollRef.current = setInterval(async () => {
+      const { data } = await supabase
+        .from('bot_instances')
+        .select('status, pairing_code')
+        .eq('id', id)
+        .single()
+
+      if (data) {
+        handleBotUpdate(data)
+
+        if (data.status === 'pairing_code' || data.status === 'connected' || data.status === 'failed') {
+          if (pollRef.current) clearInterval(pollRef.current)
+        }
+      }
+    }, 2000)
+  }
+
+  const handleBotUpdate = (bot: any) => {
+    if (bot.status === 'pairing_code' && bot.pairing_code) {
+      setPairingCode(bot.pairing_code)
+      setStatusText('Kode pairing siap!')
+      setLoading(false)
+      startCountdown()
+      return
+    }
+
+    if (bot.status === 'processing') {
+      setStatusText('Sedang menyiapkan kode pairing...')
+      return
+    }
+
+    if (bot.status === 'connected') {
+      setStatusText('Bot terhubung!')
+      setTimeout(() => router.push(`/${username}/bots/${bot.id}`), 1500)
+      return
+    }
+
+    if (bot.status === 'failed') {
+      setError('Gagal membuat pairing. Silakan coba lagi.')
+      setLoading(false)
+      return
+    }
   }
 
   const startCountdown = () => {
     setTimeLeft(60)
     if (timerRef.current) clearInterval(timerRef.current)
-    
+
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -117,18 +154,16 @@ export default function NewBotPage() {
 
     setBotId(data.bot_instance_id)
     subscribeToBot(data.bot_instance_id)
+    startPolling(data.bot_instance_id)
 
-    // Cek langsung dari Supabase (fallback kalo realtime delay)
     const { data: existing } = await supabase
       .from('bot_instances')
       .select('status, pairing_code')
       .eq('id', data.bot_instance_id)
       .single()
 
-    if (existing?.pairing_code && existing?.status === 'pairing_code') {
-      setPairingCode(existing.pairing_code)
-      setLoading(false)
-      startCountdown()
+    if (existing) {
+      handleBotUpdate(existing)
     } else {
       setStatusText('Menunggu bot server...')
     }
@@ -144,7 +179,11 @@ export default function NewBotPage() {
   const progressPercent = ((60 - timeLeft) / 60) * 100
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="max-w-2xl mx-auto"
+    >
       <Link
         href={`/${username}/bots`}
         className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition"
@@ -163,9 +202,12 @@ export default function NewBotPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onSubmit={handleSubmit}
-            className="bg-gray-900/80 backdrop-blur-xl border border-gray-800/50 rounded-3xl p-6 space-y-4"
+            className="relative bg-gray-900/80 backdrop-blur-xl border border-white/[0.06] rounded-3xl p-6 space-y-4 overflow-hidden"
           >
-            <div>
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-400 mb-2">Nomor WhatsApp</label>
               <div className="relative">
                 <Smartphone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
@@ -174,21 +216,21 @@ export default function NewBotPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="6281234567890"
-                  className="w-full bg-gray-800/50 border border-gray-700/50 rounded-2xl pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 transition-all"
+                  className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-all"
                   required
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">Masukkan nomor dengan kode negara (62xxx)</p>
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-400 mb-2">Nama Bot (opsional)</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Asuma Bot"
-                className="w-full bg-gray-800/50 border border-gray-700/50 rounded-2xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 transition-all"
+                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-all"
               />
             </div>
 
@@ -201,7 +243,7 @@ export default function NewBotPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 text-white font-semibold py-3 rounded-2xl transition-all flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 disabled:opacity-50 text-white font-semibold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 hover:shadow-2xl hover:shadow-blue-500/25 active:scale-[0.98]"
             >
               {loading ? (
                 <>
@@ -219,12 +261,12 @@ export default function NewBotPage() {
             {loading && !pairingCode && (
               <div className="text-center py-4 space-y-3">
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
-                  <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                  <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
                   {statusText || 'Menunggu pairing code...'}
                 </div>
-                <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                <div className="w-full bg-white/[0.04] rounded-full h-1.5 overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full"
+                    className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
                     animate={{ width: ['0%', '60%', '80%', '90%'] }}
                     transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
                   />
@@ -237,16 +279,19 @@ export default function NewBotPage() {
             key="pairing"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-900/80 backdrop-blur-xl border border-emerald-500/20 rounded-3xl p-8 text-center"
+            className="relative bg-gray-900/80 backdrop-blur-xl border border-blue-500/20 rounded-3xl p-8 text-center overflow-hidden"
           >
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', delay: 0.2 }}
               className="relative inline-block mb-6"
             >
-              <div className="absolute inset-0 bg-emerald-500/30 rounded-full blur-2xl animate-pulse" />
-              <div className="relative w-24 h-24 bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center shadow-2xl">
+              <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-2xl animate-pulse" />
+              <div className="relative w-24 h-24 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/25">
                 <Key size={40} className="text-white" />
               </div>
             </motion.div>
@@ -263,9 +308,9 @@ export default function NewBotPage() {
               </span>
             </div>
 
-            <div className="w-full bg-gray-800 rounded-full h-2 mb-6 overflow-hidden">
+            <div className="w-full bg-white/[0.04] rounded-full h-2 mb-6 overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-emerald-500 to-red-500 rounded-full"
+                className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-red-500 rounded-full"
                 initial={{ width: '0%' }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 1, ease: 'linear' }}
@@ -276,16 +321,16 @@ export default function NewBotPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 mb-4 relative group cursor-pointer"
+              className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 mb-4 relative group cursor-pointer hover:border-blue-500/30 transition-all"
               onClick={copyPairingCode}
             >
-              <p className="text-5xl font-mono font-bold text-emerald-400 tracking-widest">
+              <p className="text-5xl font-mono font-bold text-cyan-400 tracking-widest">
                 {pairingCode}
               </p>
               <div className="absolute top-3 right-3">
                 {copied ? (
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                    <Check size={20} className="text-emerald-400" />
+                    <Check size={20} className="text-cyan-400" />
                   </motion.div>
                 ) : (
                   <Copy size={20} className="text-gray-400 group-hover:text-white transition-colors" />
@@ -297,8 +342,8 @@ export default function NewBotPage() {
               Klik kode untuk copy • Buka WhatsApp → Perangkat Tertaut → Tautkan Perangkat
             </p>
 
-            <div className="mt-6 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl text-left">
-              <h4 className="text-sm font-medium text-emerald-400 mb-2 flex items-center gap-2">
+            <div className="mt-6 p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl text-left">
+              <h4 className="text-sm font-medium text-blue-400 mb-2 flex items-center gap-2">
                 <Shield size={16} />
                 Cara Menghubungkan
               </h4>
