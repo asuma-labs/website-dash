@@ -7,6 +7,21 @@ import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { User, Shield, Key, Bell, Palette, ChevronRight, Copy, Check, Moon, Sun } from 'lucide-react'
 
+type SettingItem = {
+  label: string
+  value?: string
+  action: 'copy' | 'navigate' | 'toggle'
+  href?: string
+  toggleValue?: boolean
+  onChange?: () => void
+}
+
+type SettingSection = {
+  title: string
+  icon: any
+  items: SettingItem[]
+}
+
 export default function SettingsPage() {
   const { username } = useParams() as { username: string }
   const supabase = createClient()
@@ -45,7 +60,7 @@ export default function SettingsPage() {
     )
   }
 
-  const settingsSections = [
+  const settingsSections: SettingSection[] = [
     {
       title: 'Akun',
       icon: User,
@@ -68,15 +83,15 @@ export default function SettingsPage() {
       title: 'Notifikasi',
       icon: Bell,
       items: [
-        { label: 'Push Notification', action: 'toggle', value: true },
-        { label: 'Email Notification', action: 'toggle', value: false },
+        { label: 'Push Notification', action: 'toggle', toggleValue: true },
+        { label: 'Email Notification', action: 'toggle', toggleValue: false },
       ],
     },
     {
       title: 'Tampilan',
       icon: Palette,
       items: [
-        { label: 'Dark Mode', action: 'toggle', value: darkMode, onChange: () => setDarkMode(!darkMode) },
+        { label: 'Dark Mode', action: 'toggle', toggleValue: darkMode, onChange: () => setDarkMode(!darkMode) },
       ],
     },
   ]
@@ -122,7 +137,7 @@ export default function SettingsPage() {
                   )}
                 </div>
 
-                {item.action === 'copy' && (
+                {item.action === 'copy' && item.value && (
                   <button
                     onClick={() => copyToClipboard(item.value!)}
                     className="flex items-center gap-2 text-xs text-gray-400 hover:text-emerald-400 transition"
@@ -151,11 +166,11 @@ export default function SettingsPage() {
                   <button
                     onClick={item.onChange}
                     className={`w-12 h-7 rounded-full transition relative ${
-                      item.value ? 'bg-emerald-500' : 'bg-gray-600'
+                      item.toggleValue ? 'bg-emerald-500' : 'bg-gray-600'
                     }`}
                   >
                     <motion.div
-                      animate={{ left: item.value ? '1.75rem' : '0.25rem' }}
+                      animate={{ left: item.toggleValue ? '1.75rem' : '0.25rem' }}
                       className="w-5 h-5 bg-white rounded-full absolute top-1 shadow-md"
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     />
