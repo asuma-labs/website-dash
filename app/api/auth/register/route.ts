@@ -33,17 +33,17 @@ export async function POST(request: Request) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
-  const { data: existingUser } = await supabase
+  const { data: existingProfile } = await supabase
     .from('profiles')
-    .select('username, phone_number')
+    .select('username, phone_number, id')
     .or(`username.eq.${trimmedUsername},phone_number.eq.${trimmedPhone}`)
     .maybeSingle()
 
-  if (existingUser) {
-    if (existingUser.username === trimmedUsername) {
+  if (existingProfile) {
+    if (existingProfile.username === trimmedUsername) {
       return NextResponse.json({ error: 'Username sudah digunakan' }, { status: 409 })
     }
-    if (existingUser.phone_number === trimmedPhone) {
+    if (existingProfile.phone_number === trimmedPhone) {
       return NextResponse.json({ error: 'Nomor sudah terdaftar' }, { status: 409 })
     }
   }
@@ -61,6 +61,9 @@ export async function POST(request: Request) {
   })
 
   if (authError) {
+    if (authError.message?.includes('already been registered') || authError.message?.includes('already exists')) {
+      return NextResponse.json({ error: 'Akun sudah terdaftar, gunakan .login untuk masuk' }, { status: 409 })
+    }
     console.error('Auth create error:', authError)
     return NextResponse.json({ error: 'Gagal membuat akun' }, { status: 500 })
   }
@@ -78,6 +81,11 @@ export async function POST(request: Request) {
   if (profileError) {
     console.error('Profile insert error:', profileError)
     await supabase.auth.admin.deleteUser(userId)
+    
+    if (profileError.code === '23505') {
+      return NextResponse.json({ error: 'Akun sudah terdaftar' }, { status: 409 })
+    }
+    
     return NextResponse.json({ error: 'Gagal menyimpan profil' }, { status: 500 })
   }
 
