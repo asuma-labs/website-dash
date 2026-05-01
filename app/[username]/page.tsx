@@ -1,4 +1,4 @@
-// app/[username]/page.tsx
+// app/[username]/page.tsx l
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
