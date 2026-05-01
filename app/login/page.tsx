@@ -1,11 +1,9 @@
 // app/login/page.tsx
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { Suspense, useState } from 'react'
 
 function LoginForm() {
-  const router = useRouter()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -30,7 +28,7 @@ function LoginForm() {
       return
     }
 
-    window.location.href = data.redirect
+    window.location.replace(`/${data.username}?token=${data.token}`)
   }
 
   return (
