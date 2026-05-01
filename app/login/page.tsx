@@ -28,7 +28,7 @@ function LoginForm() {
       return
     }
 
-    window.location.replace(`/${data.username}?token=${data.token}`)
+    window.location.href = `/${data.username}`
   }
 
   return (
