@@ -14,7 +14,9 @@ export default async function UsernameLayout({
   const supabase = await createServerSupabase()
   const { data: { session } } = await supabase.auth.getSession()
 
-  if (!session) redirect('/login')
+  if (!session) {
+    redirect(`/login?redirect=/${username}`)
+  }
 
   const sessionUsername = session.user.user_metadata?.username
   if (sessionUsername !== username) {
