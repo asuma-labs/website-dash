@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 
 export async function POST(request: Request) {
   const { username, password } = await request.json()
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabaseAdmin
     .from('profiles')
-    .select('id, username, password_hash, phone_number, email')
+    .select('id, username, password_hash')
     .eq('username', username.toLowerCase().trim())
     .single()
 
@@ -32,53 +33,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Password salah' }, { status: 401 })
   }
 
-  const email = profile.email || `${profile.username}@asuma.local`
+  const loginToken = crypto.randomBytes(32).toString('hex')
 
-  const { data: existingUser } = await supabaseAdmin.auth.admin.getUserById(profile.id)
-
-  if (!existingUser?.user) {
-    await supabaseAdmin.auth.admin.createUser({
-      id: profile.id,
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { username: profile.username, phone_number: profile.phone_number },
-    })
-  } else {
-    await supabaseAdmin.auth.admin.updateUserById(profile.id, { password })
-  }
-
-  const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
-    email,
-    password,
+  await supabaseAdmin.from('magic_tokens').insert({
+    user_id: profile.id,
+    token: loginToken,
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   })
 
-  if (signInError || !signInData?.session) {
-    console.error('Sign in error:', signInError)
-    return NextResponse.json({ error: 'Gagal login ke Supabase Auth' }, { status: 500 })
-  }
-
-  const response = NextResponse.json({
+  return NextResponse.json({
     success: true,
     username: profile.username,
-    redirect: `/${profile.username}`,
+    token: loginToken,
+    redirect: `/${profile.username}?token=${loginToken}`,
   })
-
-  response.cookies.set('sb-access-token', signInData.session.access_token, {
-    httpOnly: false,
-    secure: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60,
-  })
-
-  response.cookies.set('sb-refresh-token', signInData.session.refresh_token, {
-    httpOnly: false,
-    secure: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7,
-  })
-
-  return response
 }
