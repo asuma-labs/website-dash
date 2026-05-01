@@ -38,13 +38,12 @@ export async function POST(request: Request) {
   await supabaseAdmin.from('magic_tokens').insert({
     user_id: profile.id,
     token: loginToken,
-    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   })
 
   return NextResponse.json({
     success: true,
     username: profile.username,
     token: loginToken,
-    redirect: `/${profile.username}?token=${loginToken}`,
   })
 }
