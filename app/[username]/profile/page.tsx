@@ -3,7 +3,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Bot, Zap, Crown, Settings, Shield, LogOut, Edit3, Save, X, RefreshCw } from 'lucide-react'
+import { Bot, Zap, Crown, Settings, Shield, LogOut, Edit3, Save, X, RefreshCw, Camera, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
@@ -11,14 +11,29 @@ export default function ProfilePage() {
   const { username } = useParams() as { username: string }
   const router = useRouter()
   const [editing, setEditing] = useState(false)
+  const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [botCount, setBotCount] = useState(0)
   const [activeBots, setActiveBots] = useState(0)
+  const [profile, setProfile] = useState<any>(null)
 
   useEffect(() => {
+    fetchProfile()
     fetchBotCount()
   }, [])
+
+  const fetchProfile = async () => {
+    const res = await fetch('/api/auth/profile')
+    const data = await res.json()
+    if (data.profile) {
+      setProfile(data.profile)
+      setDisplayName(data.profile.display_name || '')
+      setBio(data.profile.bio || '')
+      setAvatarUrl(data.profile.avatar_url || '')
+    }
+  }
 
   const fetchBotCount = async () => {
     const res = await fetch('/api/bots/list')
@@ -39,7 +54,7 @@ export default function ProfilePage() {
     await fetch('/api/auth/update-profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bio }),
+      body: JSON.stringify({ display_name: displayName, bio, avatar_url: avatarUrl }),
     })
     setSaving(false)
     setEditing(false)
@@ -49,13 +64,50 @@ export default function ProfilePage() {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto space-y-6">
       <div className="text-center">
         <div className="relative inline-block">
-          <div className="absolute inset-0 bg-emerald-500/30 rounded-full blur-2xl" />
-          <div className="relative w-28 h-28 bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center text-5xl font-bold shadow-2xl border-4 border-gray-900">
-            {username[0].toUpperCase()}
-          </div>
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt={username}
+              className="w-28 h-28 rounded-full object-cover border-4 border-gray-900 shadow-2xl"
+            />
+          ) : (
+            <div className="relative">
+              <div className="absolute inset-0 bg-emerald-500/30 rounded-full blur-2xl" />
+              <div className="relative w-28 h-28 bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center text-5xl font-bold shadow-2xl border-4 border-gray-900">
+                {username[0].toUpperCase()}
+              </div>
+            </div>
+          )}
+          {editing && (
+            <div className="absolute bottom-0 right-0">
+              <input
+                type="text"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                placeholder="URL avatar"
+                className="w-48 bg-gray-900 border border-gray-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 absolute left-1/2 -translate-x-1/2 -bottom-10"
+              />
+            </div>
+          )}
         </div>
-        <h1 className="text-2xl font-bold mt-4">@{username}</h1>
-        <p className="text-gray-500 text-sm">Dashboard User</p>
+
+        {editing ? (
+          <div className="mt-4 space-y-2">
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Display Name"
+              className="block mx-auto bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-2 text-lg font-bold text-white text-center placeholder-gray-500 focus:outline-none focus:border-emerald-500/50"
+            />
+            <p className="text-gray-500 text-sm">@{username}</p>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-2xl font-bold mt-4">{displayName || `@${username}`}</h1>
+            {displayName && <p className="text-gray-500 text-sm">@{username}</p>}
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -91,13 +143,16 @@ export default function ProfilePage() {
           )}
         </div>
         {editing ? (
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            placeholder="Tulis bio kamu..."
-            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 resize-none"
-            rows={3}
-          />
+          <>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Tulis bio kamu..."
+              className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 resize-none mb-2"
+              rows={3}
+            />
+            <p className="text-[10px] text-gray-600">Edit mode: Display Name, Avatar URL, dan Bio bisa diubah.</p>
+          </>
         ) : (
           <p className="text-sm text-gray-400">{bio || 'Belum ada bio. Klik edit untuk menambahkan.'}</p>
         )}
