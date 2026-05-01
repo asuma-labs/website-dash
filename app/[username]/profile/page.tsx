@@ -1,4 +1,4 @@
-// app/[username]/profile/page.tsx
+// app/[username]/profile/page.tsx,
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
