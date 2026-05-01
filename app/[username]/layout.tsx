@@ -8,21 +8,22 @@ export default async function UsernameLayout({
   params,
 }: {
   children: React.ReactNode
-  params: { username: string }
+  params: Promise<{ username: string }>
 }) {
+  const { username } = await params
   const supabase = await createServerSupabase()
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) redirect('/login')
 
   const sessionUsername = session.user.user_metadata?.username
-  if (sessionUsername !== params.username) {
+  if (sessionUsername !== username) {
     redirect(`/${sessionUsername}`)
   }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex">
-      <DashboardNav user={session.user} username={params.username} />
+      <DashboardNav user={session.user} username={username} />
       <main className="flex-1 p-8 ml-64">{children}</main>
     </div>
   )
