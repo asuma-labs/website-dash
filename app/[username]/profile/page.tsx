@@ -3,18 +3,20 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Bot, Zap, Crown, Settings, Shield, LogOut, Edit3, Save, X, RefreshCw, Camera, Check } from 'lucide-react'
+import { Bot, Zap, Crown, Settings, Shield, LogOut, Edit3, Save, X, RefreshCw, Camera, Check, Upload } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 export default function ProfilePage() {
   const { username } = useParams() as { username: string }
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [editing, setEditing] = useState(false)
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [botCount, setBotCount] = useState(0)
   const [activeBots, setActiveBots] = useState(0)
   const [profile, setProfile] = useState<any>(null)
@@ -54,19 +56,41 @@ export default function ProfilePage() {
     await fetch('/api/auth/update-profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ display_name: displayName, bio, avatar_url: avatarUrl }),
+      body: JSON.stringify({ display_name: displayName, bio }),
     })
     setSaving(false)
     setEditing(false)
+    fetchProfile()
+  }
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('avatar', file)
+
+    const res = await fetch('/api/auth/upload-avatar', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const data = await res.json()
+    if (data.success) {
+      setAvatarUrl(data.avatar_url)
+      fetchProfile()
+    }
+    setUploading(false)
   }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto space-y-6">
       <div className="text-center">
-        <div className="relative inline-block">
-          {profile?.avatar_url ? (
+        <div className="relative inline-block group">
+          {avatarUrl ? (
             <img
-              src={profile.avatar_url}
+              src={avatarUrl}
               alt={username}
               className="w-28 h-28 rounded-full object-cover border-4 border-gray-900 shadow-2xl"
             />
@@ -78,17 +102,24 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
-          {editing && (
-            <div className="absolute bottom-0 right-0">
-              <input
-                type="text"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                placeholder="URL avatar"
-                className="w-48 bg-gray-900 border border-gray-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 absolute left-1/2 -translate-x-1/2 -bottom-10"
-              />
-            </div>
-          )}
+          
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute bottom-0 right-0 w-9 h-9 bg-gray-900 border-2 border-gray-700 rounded-full flex items-center justify-center hover:bg-gray-800 transition shadow-lg opacity-0 group-hover:opacity-100"
+          >
+            {uploading ? (
+              <RefreshCw size={16} className="animate-spin text-emerald-400" />
+            ) : (
+              <Camera size={16} className="text-gray-300" />
+            )}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleUpload}
+            className="hidden"
+          />
         </div>
 
         {editing ? (
@@ -151,7 +182,7 @@ export default function ProfilePage() {
               className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 resize-none mb-2"
               rows={3}
             />
-            <p className="text-[10px] text-gray-600">Edit mode: Display Name, Avatar URL, dan Bio bisa diubah.</p>
+            <p className="text-[10px] text-gray-600">Edit mode: Display Name dan Bio bisa diubah.</p>
           </>
         ) : (
           <p className="text-sm text-gray-400">{bio || 'Belum ada bio. Klik edit untuk menambahkan.'}</p>
