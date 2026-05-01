@@ -12,22 +12,41 @@ export default async function UsernameLayout({
 }) {
   const { username } = await params
   const supabase = await createServerSupabase()
+
   const { data: { session } } = await supabase.auth.getSession()
 
-  if (!session) {
-    redirect(`/login?redirect=/${username}`)
-    return null
+  if (session) {
+    const sessionUsername = session.user.user_metadata?.username
+    if (sessionUsername && sessionUsername !== username) {
+      redirect(`/${sessionUsername}`)
+    }
+    return (
+      <div className="min-h-screen bg-gray-950 text-white flex">
+        <DashboardNav user={session.user} username={username} />
+        <main className="flex-1 p-8 ml-64">{children}</main>
+      </div>
+    )
   }
 
-  const sessionUsername = session.user.user_metadata?.username
-  if (sessionUsername !== username) {
-    redirect(`/${sessionUsername}`)
-    return null
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, username')
+    .eq('username', username)
+    .single()
+
+  if (!profile) {
+    redirect('/login')
+  }
+
+  const simpleUser = {
+    id: profile.id,
+    email: `${profile.username}@asuma.local`,
+    user_metadata: { username: profile.username, full_name: profile.username },
   }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex">
-      <DashboardNav user={session.user} username={username} />
+      <DashboardNav user={simpleUser} username={username} />
       <main className="flex-1 p-8 ml-64">{children}</main>
     </div>
   )
