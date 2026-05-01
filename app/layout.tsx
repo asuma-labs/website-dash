@@ -1,11 +1,9 @@
 // app/layout.tsx
-import './globals.css';
-import { Inter } from 'next/font/google';
-import { SessionProvider } from 'next-auth/react';
-import { ThemeProvider } from 'next-themes';
-import { PWAProvider } from '@/components/PWAProvider';
+import './globals.css'
+import { Inter } from 'next/font/google'
+import { ThemeProvider } from 'next-themes'
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   title: {
@@ -15,12 +13,10 @@ export const metadata = {
   description: 'Layanan bot WhatsApp terpercaya untuk bisnis & pribadi. Jadibot instan, pairing cepat, online 24 jam.',
   keywords: [
     'whatsapp bot', 'jadibot whatsapp', 'bot wa indonesia', 'asuma bot',
-    'pairing code whatsapp', 'jadibot clone', 'downloader instagram',
-    'downloader tiktok', 'bot whatsapp premium', 'panel pterodactyl',
+    'pairing code whatsapp', 'jadibot clone',
   ],
   authors: [{ name: 'Asuma Team' }],
   creator: 'Asuma Team',
-  publisher: 'Asuma',
   alternates: {
     canonical: 'https://asuma.my.id',
   },
@@ -33,7 +29,7 @@ export const metadata = {
     type: 'website',
     images: [
       {
-        url: '/icons/android-chrome-512x512.png', 
+        url: '/icons/android-chrome-512x512.png',
         width: 512,
         height: 512,
         alt: 'Asuma Bot WhatsApp Logo',
@@ -46,22 +42,18 @@ export const metadata = {
     description: 'Jadibot WhatsApp instan & premium',
     images: ['/icons/android-chrome-512x512.png'],
   },
-  verification: {
-    google: 'hMmtzBFUiEDI1-fsDioUzB0VgKiARhdFCaAwKIBmEJw',
-  },
   icons: {
     icon: [
       { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { url: '/icons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/icons/favicon.ico' },
+      { url: '/favicon.ico' },
     ],
-    shortcut: '/icons/favicon.ico',
+    shortcut: '/favicon.ico',
     apple: [
       { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
-  category: 'technology',
-};
+}
 
 export const viewport = {
   width: 'device-width',
@@ -70,23 +62,10 @@ export const viewport = {
   userScalable: true,
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#4f46e5' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
   ],
-};
+}
 
-/*export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="id" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SessionProvider>
-            {children}
-          </SessionProvider>
-        </ThemeProvider>
-      </body>
-    </html>
-  );
-}*/
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" suppressHydrationWarning>
@@ -98,14 +77,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SessionProvider>
-            <PWAProvider />
-            {children}
-          </SessionProvider>
+      <body className={`${inter.className} bg-gray-950 text-white antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          {children}
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
