@@ -7,8 +7,9 @@ import { ArrowLeft, Settings, Users, BarChart3 } from 'lucide-react'
 export default async function BotDetailPage({
   params,
 }: {
-  params: { username: string; botId: string }
+  params: Promise<{ username: string; botId: string }>
 }) {
+  const { username, botId } = await params
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   const supabase2 = createBotDB()
@@ -16,7 +17,7 @@ export default async function BotDetailPage({
   const { data: bot } = await supabase
     .from('bot_instances')
     .select('*')
-    .eq('id', params.botId)
+    .eq('id', botId)
     .eq('user_id', user?.id)
     .single()
 
@@ -32,7 +33,7 @@ export default async function BotDetailPage({
   return (
     <div>
       <Link
-        href={`/${params.username}/bots`}
+        href={`/${username}/bots`}
         className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition"
       >
         <ArrowLeft size={20} />
@@ -65,7 +66,7 @@ export default async function BotDetailPage({
 
         <div className="grid grid-cols-3 gap-4">
           <Link
-            href={`/${params.username}/bots/${params.botId}/settings`}
+            href={`/${username}/bots/${botId}/settings`}
             className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition flex items-center gap-3"
           >
             <Settings size={24} className="text-blue-400" />
@@ -76,7 +77,7 @@ export default async function BotDetailPage({
           </Link>
 
           <Link
-            href={`/${params.username}/bots/${params.botId}/users`}
+            href={`/${username}/bots/${botId}/users`}
             className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition flex items-center gap-3"
           >
             <Users size={24} className="text-green-400" />
@@ -87,7 +88,7 @@ export default async function BotDetailPage({
           </Link>
 
           <Link
-            href={`/${params.username}/bots/${params.botId}/stats`}
+            href={`/${username}/bots/${botId}/stats`}
             className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition flex items-center gap-3"
           >
             <BarChart3 size={24} className="text-yellow-400" />
