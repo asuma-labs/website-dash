@@ -3,7 +3,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Home, Bot, Settings, LogOut, Zap, Sparkles, Activity } from 'lucide-react'
+import { Home, Bot, Settings, LogOut, Zap, Sparkles, Activity, Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
@@ -12,7 +12,7 @@ export default function DashboardNav({ user, username }: { user: any; username: 
   const supabase = createClient()
   const router = useRouter()
   const pathname = usePathname()
-  const [hovered, setHovered] = useState<string | null>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const signOut = async () => {
     await supabase.auth.signOut()
@@ -25,8 +25,8 @@ export default function DashboardNav({ user, username }: { user: any; username: 
     { href: `/${username}/settings`, label: 'Settings', icon: Settings, color: 'from-purple-500 to-pink-500' },
   ]
 
-  return (
-    <aside className="w-72 fixed h-full bg-gray-900/80 backdrop-blur-xl border-r border-gray-800/50 p-6 flex flex-col shadow-2xl">
+  const sidebarContent = (
+    <>
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
@@ -46,8 +46,7 @@ export default function DashboardNav({ user, username }: { user: any; username: 
           <Link
             key={href}
             href={href}
-            onMouseEnter={() => setHovered(href)}
-            onMouseLeave={() => setHovered(null)}
+            onClick={() => setMobileOpen(false)}
             className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden ${
               pathname === href
                 ? 'text-white'
@@ -57,13 +56,10 @@ export default function DashboardNav({ user, username }: { user: any; username: 
             {pathname === href && (
               <div className={`absolute inset-0 bg-gradient-to-r ${color} opacity-10 rounded-xl`} />
             )}
-            {hovered === href && !(pathname === href) && (
-              <div className="absolute inset-0 bg-white/5 rounded-xl" />
-            )}
             {pathname === href && (
               <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b ${color} rounded-r-full`} />
             )}
-            <Icon size={20} className={pathname === href ? 'text-green-400' : ''} />
+            <Icon size={20} className={pathname === href ? 'text-green-400' : 'group-hover:text-white transition-colors'} />
             <span className="font-medium">{label}</span>
             {pathname === href && (
               <Sparkles size={14} className="ml-auto text-green-400 animate-pulse" />
@@ -93,6 +89,44 @@ export default function DashboardNav({ user, username }: { user: any; username: 
           Logout
         </button>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gray-900 rounded-lg border border-gray-800"
+      >
+        <Menu size={24} className="text-white" />
+      </button>
+
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+      )}
+
+      <aside className={`
+        lg:translate-x-0 fixed lg:sticky top-0 left-0 h-full z-50
+        w-72 bg-gray-900/95 backdrop-blur-xl border-r border-gray-800/50 p-6 flex flex-col shadow-2xl
+        transition-transform duration-300
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="lg:hidden absolute top-4 right-4 p-1 hover:bg-gray-800 rounded-lg"
+        >
+          <X size={20} className="text-gray-400" />
+        </button>
+        {sidebarContent}
+      </aside>
+
+      <style jsx global>{`
+        @media (min-width: 1024px) {
+          aside {
+            position: fixed !important;
+          }
+        }
+      `}</style>
+    </>
   )
 }
