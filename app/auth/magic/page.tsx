@@ -21,44 +21,67 @@ function MagicContent() {
     }
 
     const verifyToken = async () => {
-      const res = await fetch('/api/auth/magic', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      })
+      try {
+        const res = await fetch('/api/auth/magic', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        })
 
-      const data = await res.json()
+        const data = await res.json()
 
-      if (!res.ok) {
+        if (!res.ok) {
+          setStatus('error')
+          setMessage(data.error || 'Token tidak valid')
+          return
+        }
+
+        if (!data.access_token) {
+          setStatus('error')
+          setMessage('Gagal mendapatkan session')
+          return
+        }
+
+        await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        })
+
+        setStatus('success')
+        setMessage('Login berhasil! Mengalihkan...')
+
+        setTimeout(() => {
+          router.push(`/${data.username}`)
+        }, 1500)
+      } catch (err) {
         setStatus('error')
-        setMessage(data.error || 'Token tidak valid')
-        return
+        setMessage('Gagal menghubungi server')
       }
-
-      setStatus('success')
-      setMessage('Login berhasil! Mengalihkan...')
-
-      await supabase.auth.setSession({
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
-      })
-
-      setTimeout(() => {
-        router.push(`/${data.username}`)
-      }, 1000)
     }
 
     verifyToken()
-  }, [token])
+  }, [token, router, supabase])
 
   return (
     <div className="text-center">
       {status === 'loading' && (
-        <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4" />
+        <>
+          <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-white text-lg">{message}</p>
+        </>
       )}
-      {status === 'error' && <p className="text-red-400 text-6xl mb-4">✗</p>}
-      {status === 'success' && <p className="text-green-400 text-6xl mb-4">✓</p>}
-      <p className="text-white text-lg">{message}</p>
+      {status === 'error' && (
+        <>
+          <p className="text-red-400 text-6xl mb-4">✗</p>
+          <p className="text-white text-lg">{message}</p>
+        </>
+      )}
+      {status === 'success' && (
+        <>
+          <p className="text-green-400 text-6xl mb-4">✓</p>
+          <p className="text-white text-lg">{message}</p>
+        </>
+      )}
     </div>
   )
 }
@@ -66,14 +89,18 @@ function MagicContent() {
 export default function MagicPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <Suspense fallback={
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-white text-lg">Loading...</p>
-        </div>
-      }>
-        <MagicContent />
-      </Suspense>
+      <div className="max-w-md w-full p-8">
+        <Suspense
+          fallback={
+            <div className="text-center">
+              <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4" />
+              <p className="text-white text-lg">Loading...</p>
+            </div>
+          }
+        >
+          <MagicContent />
+        </Suspense>
+      </div>
     </div>
   )
 }
