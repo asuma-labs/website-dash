@@ -3,9 +3,9 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 
-export default function MagicPage() {
+function MagicContent() {
   const supabase = createClient()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -52,15 +52,28 @@ export default function MagicPage() {
   }, [token])
 
   return (
+    <div className="text-center">
+      {status === 'loading' && (
+        <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4" />
+      )}
+      {status === 'error' && <p className="text-red-400 text-6xl mb-4">✗</p>}
+      {status === 'success' && <p className="text-green-400 text-6xl mb-4">✓</p>}
+      <p className="text-white text-lg">{message}</p>
+    </div>
+  )
+}
+
+export default function MagicPage() {
+  return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <div className="text-center">
-        {status === 'loading' && (
+      <Suspense fallback={
+        <div className="text-center">
           <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4" />
-        )}
-        {status === 'error' && <p className="text-red-400 text-6xl mb-4">✗</p>}
-        {status === 'success' && <p className="text-green-400 text-6xl mb-4">✓</p>}
-        <p className="text-white text-lg">{message}</p>
-      </div>
+          <p className="text-white text-lg">Loading...</p>
+        </div>
+      }>
+        <MagicContent />
+      </Suspense>
     </div>
   )
 }
