@@ -16,6 +16,7 @@ export default function BotDetailPage() {
   const [loading, setLoading] = useState(true)
   const [stopping, setStopping] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetchBot()
@@ -33,12 +34,17 @@ export default function BotDetailPage() {
   }, [botId])
 
   const fetchBot = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('bot_instances')
       .select('*')
       .eq('id', botId)
       .single()
-    setBot(data)
+
+    if (error || !data) {
+      setError('Bot tidak ditemukan')
+    } else {
+      setBot(data)
+    }
     setLoading(false)
   }
 
@@ -51,8 +57,11 @@ export default function BotDetailPage() {
   const deleteBot = async () => {
     if (!confirm('Yakin hapus bot ini? Data tidak bisa dikembalikan.')) return
     setDeleting(true)
-    await fetch(`/api/bots/${botId}/delete`, { method: 'DELETE' })
-    router.push(`/${username}/bots`)
+    const res = await fetch(`/api/bots/${botId}/delete`, { method: 'DELETE' })
+    if (res.ok) {
+      router.push(`/${username}/bots`)
+    }
+    setDeleting(false)
   }
 
   if (loading) {
@@ -63,8 +72,15 @@ export default function BotDetailPage() {
     )
   }
 
-  if (!bot) {
-    return <p className="text-gray-400 text-center py-20">Bot tidak ditemukan</p>
+  if (error || !bot) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-gray-400 text-lg mb-4">{error || 'Bot tidak ditemukan'}</p>
+        <Link href={`/${username}/bots`} className="text-emerald-400 hover:underline">
+          Kembali ke daftar bot
+        </Link>
+      </div>
+    )
   }
 
   return (
@@ -105,16 +121,18 @@ export default function BotDetailPage() {
         )}
 
         <div className="grid grid-cols-3 gap-4 mb-6">
-          {[
-            { icon: Settings, label: 'Settings', href: `/${username}/bots/${botId}/settings`, color: 'text-blue-400' },
-            { icon: Users, label: 'Users', href: `/${username}/bots/${botId}/users`, color: 'text-emerald-400' },
-            { icon: BarChart3, label: 'Statistik', href: `/${username}/bots/${botId}/stats`, color: 'text-purple-400' },
-          ].map(({ icon: Icon, label, href, color }) => (
-            <Link key={label} href={href} className="bg-gray-800/50 hover:bg-gray-800 rounded-2xl p-4 text-center transition">
-              <Icon size={24} className={`mx-auto mb-2 ${color}`} />
-              <p className="text-sm font-medium">{label}</p>
-            </Link>
-          ))}
+          <Link href={`/${username}/bots/${botId}/settings`} className="bg-gray-800/50 hover:bg-gray-800 rounded-2xl p-4 text-center transition">
+            <Settings size={24} className="mx-auto mb-2 text-blue-400" />
+            <p className="text-sm font-medium">Settings</p>
+          </Link>
+          <Link href={`/${username}/bots/${botId}/users`} className="bg-gray-800/50 hover:bg-gray-800 rounded-2xl p-4 text-center transition">
+            <Users size={24} className="mx-auto mb-2 text-emerald-400" />
+            <p className="text-sm font-medium">Users</p>
+          </Link>
+          <Link href={`/${username}/bots/${botId}/stats`} className="bg-gray-800/50 hover:bg-gray-800 rounded-2xl p-4 text-center transition">
+            <BarChart3 size={24} className="mx-auto mb-2 text-purple-400" />
+            <p className="text-sm font-medium">Statistik</p>
+          </Link>
         </div>
 
         <div className="flex gap-3">
