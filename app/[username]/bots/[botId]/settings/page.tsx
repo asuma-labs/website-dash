@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, Save, Loader2, Settings2, Zap, MessageSquare, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Settings2, Zap, MessageSquare, CheckCircle, Type, Mic } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -38,10 +38,10 @@ export default function BotSettingsPage() {
       premium_only: false,
       custom_reply: '',
       welcome_message: '',
-      response_wait: '⏳ Tunggu sebentar...',
-      response_error: '❌ Terjadi kesalahan!',
+      response_wait: 'Tunggu sebentar...',
+      response_error: 'Terjadi kesalahan!',
       response_limit: 'Limit kamu habis!',
-      response_success: '✅ Berhasil!',
+      response_success: 'Berhasil!',
       response_cooldown: 'Tunggu sebentar...',
     })
     setLoading(false)
@@ -196,23 +196,25 @@ export default function BotSettingsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => update('auto_typing_type', 'typing')}
-                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                         settings.auto_typing_type === 'typing'
                           ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/20'
                           : 'bg-white/[0.03] border border-white/[0.06] text-gray-400 hover:bg-white/[0.05]'
                       }`}
                     >
-                      ✍️ Typing ...
+                      <Type size={14} />
+                      Typing ...
                     </button>
                     <button
                       onClick={() => update('auto_typing_type', 'recording')}
-                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                         settings.auto_typing_type === 'recording'
                           ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/20'
                           : 'bg-white/[0.03] border border-white/[0.06] text-gray-400 hover:bg-white/[0.05]'
                       }`}
                     >
-                      🎤 Recording ...
+                      <Mic size={14} />
+                      Recording ...
                     </button>
                   </div>
                 </motion.div>
