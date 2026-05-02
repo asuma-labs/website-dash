@@ -12,23 +12,25 @@ export default function TestSessionPage() {
     const runTests = async () => {
       const r: any = {}
 
-      r.cookie = document.cookie
-
       const sessionRes = await fetch('/api/auth/session', { method: 'POST' })
       r.apiSession = await sessionRes.json()
-
-      const { data } = await supabase.auth.getSession()
-      r.supabaseSession = data
 
       if (r.apiSession.access_token) {
         await supabase.auth.setSession({
           access_token: r.apiSession.access_token,
           refresh_token: r.apiSession.refresh_token,
         })
-        r.sessionSet = 'done'
 
-        const { data: bots } = await supabase.from('bot_instances').select('*').limit(3)
+        const { data: sessionData } = await supabase.auth.getSession()
+        r.supabaseSession = sessionData
+
+        const { data: bots, error } = await supabase.from('bot_instances').select('*').limit(3)
         r.bots = bots
+        r.botsError = error
+
+        const { data: allBots, error: allError } = await supabase.from('bot_instances').select('*', { count: 'exact' })
+        r.allBotsCount = allBots?.length
+        r.allBotsError = allError
       }
 
       setResults(r)
