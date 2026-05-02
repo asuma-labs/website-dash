@@ -5,14 +5,13 @@ import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Zap, Bot, Activity, Plus, ArrowRight, Sparkles, Waves, Eye } from 'lucide-react'
+import { Zap, Bot, Activity, Plus, ArrowRight, Sparkles, Waves } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function DashboardPage() {
   const { username } = useParams() as { username: string }
   const supabase = createClient()
-  const [myBots, setMyBots] = useState<any[]>([])
-  const [otherBots, setOtherBots] = useState<any[]>([])
+  const [allBots, setAllBots] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -43,12 +42,14 @@ export default function DashboardPage() {
     const { data: all } = await supabase.from('bot_instances').select('*').order('created_at', { ascending: false })
 
     if (all) {
-      setMyBots(all.filter(b => b.user_id === uid))
-      setOtherBots(all.filter(b => b.user_id !== uid && b.status === 'connected').slice(0, 3))
+      const myBots = all.filter(b => b.user_id === uid)
+      const otherBots = all.filter(b => b.user_id !== uid)
+      setAllBots([...myBots, ...otherBots])
     }
     setLoading(false)
   }
 
+  const myBots = allBots.filter(b => b.user_id === userId)
   const activeBots = myBots.filter(b => b.status === 'connected').length
   const pairingBots = myBots.filter(b => b.status === 'pairing_code').length
   const totalBots = myBots.length
@@ -89,66 +90,44 @@ export default function DashboardPage() {
       </div>
 
       <div className="bg-gray-900/80 backdrop-blur-xl border border-white/[0.06] rounded-3xl p-6">
-        {myBots.length > 0 ? (
-          <>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-xl font-bold flex items-center gap-2"><Bot size={24} className="text-cyan-400" /> Bot Anda</h2>
-                <p className="text-xs text-gray-500 mt-1">Bot WhatsApp milik kamu</p>
-              </div>
-              <Link href={`/${username}/bots`} className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1">Lihat Semua <ArrowRight size={16} /></Link>
-            </div>
-            <div className="space-y-3">
-              {myBots.slice(0, 5).map((bot: any) => (
-                <Link key={bot.id} href={`/${username}/bots/${bot.id}`} className="flex items-center justify-between p-4 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] rounded-2xl transition-all group">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl ${bot.status === 'connected' ? 'bg-cyan-500/20' : 'bg-gray-500/20'}`}>🤖</div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2"><Bot size={24} className="text-cyan-400" /> Semua Bot</h2>
+          <Link href={`/${username}/bots`} className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1">Lihat Semua <ArrowRight size={16} /></Link>
+        </div>
+
+        {allBots.length === 0 ? (
+          <div className="text-center py-16">
+            <Bot size={48} className="text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400 text-lg mb-2">Belum ada bot</p>
+            <Link href={`/${username}/bots/new`} className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl font-semibold text-sm"><Plus size={18} /> Buat Bot Pertama</Link>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {allBots.slice(0, 10).map((bot: any) => {
+              const isMine = bot.user_id === userId
+              return (
+                <Link key={bot.id} href={`/${username}/bots/${bot.id}`} className={`flex items-center justify-between p-3.5 rounded-2xl transition-all group ${isMine ? 'bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05]' : 'bg-white/[0.01] hover:bg-white/[0.03] border border-white/[0.02] opacity-70'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${isMine ? (bot.status === 'connected' ? 'bg-cyan-500/20' : 'bg-gray-500/20') : 'bg-gray-500/10'}`}>🤖</div>
                     <div>
-                      <p className="font-semibold">{bot.bot_name || 'Asuma Bot'}</p>
-                      <p className="text-sm text-gray-400">{bot.phone_number.slice(0, 4)}****{bot.phone_number.slice(-3)}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm">{bot.bot_name || 'Asuma Bot'}</p>
+                        {isMine && <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-cyan-500/20 text-cyan-400 font-medium">Milikmu</span>}
+                      </div>
+                      <p className="text-xs text-gray-500">{bot.phone_number.slice(0, 4)}****{bot.phone_number.slice(-3)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 ${bot.status === 'connected' ? 'bg-cyan-500/10 text-cyan-400' : 'bg-gray-500/10 text-gray-400'}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${bot.status === 'connected' ? 'bg-cyan-400 animate-pulse' : ''}`} />
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${bot.status === 'connected' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-500/10 text-gray-400'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full inline-block mr-1 ${bot.status === 'connected' ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`} />
                       {bot.status === 'connected' ? 'Active' : bot.status}
                     </span>
-                    <ArrowRight size={18} className="text-gray-600 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+                    <ArrowRight size={16} className="text-gray-600 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
                   </div>
                 </Link>
-              ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-xl font-bold flex items-center gap-2"><Eye size={24} className="text-gray-400" /> Bot Lainnya yang Aktif</h2>
-                <p className="text-xs text-gray-500 mt-1">Kamu belum punya bot. Ini contoh bot lain.</p>
-              </div>
-              <Link href={`/${username}/bots/new`} className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center gap-1"><Plus size={16} /> Buat Bot</Link>
-            </div>
-            {otherBots.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">Belum ada bot aktif</p>
-            ) : (
-              <div className="space-y-3">
-                {otherBots.map((bot: any) => (
-                  <div key={bot.id} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.04] rounded-2xl opacity-60">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-2xl">🤖</div>
-                      <div>
-                        <p className="font-semibold">{bot.bot_name || 'Asuma Bot'}</p>
-                        <p className="text-sm text-gray-400">{bot.phone_number.slice(0, 4)}****{bot.phone_number.slice(-3)}</p>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/5 text-emerald-400/70">
-                      <span className="w-1.5 h-1.5 bg-emerald-400/50 rounded-full inline-block mr-1.5" />Active
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
+              )
+            })}
+          </div>
         )}
       </div>
     </motion.div>
