@@ -18,32 +18,32 @@ export default function BotsPage() {
     const init = async () => {
       const { data: sessionData } = await supabase.auth.getSession()
       if (sessionData?.session) {
-        fetchBots()
+        fetchMyBots()
       } else {
-        setTimeout(init, 1000)
+        setTimeout(init, 500)
       }
     }
     init()
 
     const channel = supabase
-      .channel('bots-list')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bot_instances' }, fetchBots)
+      .channel('my-bots')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bot_instances' }, fetchMyBots)
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  const fetchBots = async () => {
+  const fetchMyBots = async () => {
     const { data: sessionData } = await supabase.auth.getSession()
-    const userId = sessionData?.session?.user?.id
+    const uid = sessionData?.session?.user?.id
+    if (!uid) return
 
-    const query = supabase.from('bot_instances').select('*').order('created_at', { ascending: false })
+    const { data } = await supabase
+      .from('bot_instances')
+      .select('*')
+      .eq('user_id', uid)
+      .order('created_at', { ascending: false })
 
-    if (userId) {
-      query.eq('user_id', userId)
-    }
-
-    const { data } = await query
     setBots(data || [])
     setLoading(false)
   }
@@ -65,13 +65,13 @@ export default function BotsPage() {
           {bots.map((bot: any) => (
             <Link key={bot.id} href={`/${username}/bots/${bot.id}`} className="flex items-center justify-between p-4 bg-gray-900/80 backdrop-blur-xl border border-gray-800/50 rounded-2xl hover:bg-gray-800/50 transition-all group">
               <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${bot.status === 'connected' ? 'bg-gradient-to-br from-emerald-500/20 to-green-500/20' : bot.status === 'pairing_code' ? 'bg-gradient-to-br from-amber-500/20 to-yellow-500/20' : 'bg-gray-500/20'}`}>🤖</div>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${bot.status === 'connected' ? 'bg-gradient-to-br from-emerald-500/20 to-green-500/20' : 'bg-gray-500/20'}`}>🤖</div>
                 <div><p className="font-semibold">{bot.bot_name || 'Asuma Bot'}</p><p className="text-sm text-gray-400">{bot.phone_number.slice(0, 4)}****{bot.phone_number.slice(-3)}</p></div>
               </div>
               <div className="flex items-center gap-4">
-                <span className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 ${bot.status === 'connected' ? 'bg-emerald-500/10 text-emerald-400' : bot.status === 'pairing_code' ? 'bg-amber-500/10 text-amber-400' : 'bg-gray-500/10 text-gray-400'}`}>
+                <span className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 ${bot.status === 'connected' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-500/10 text-gray-400'}`}>
                   <span className={`w-2 h-2 rounded-full ${bot.status === 'connected' ? 'bg-emerald-400 animate-pulse' : ''}`} />
-                  {bot.status === 'pairing_code' ? 'Pairing' : bot.status === 'connected' ? 'Active' : bot.status}
+                  {bot.status === 'connected' ? 'Active' : bot.status}
                 </span>
                 <ArrowRight size={18} className="text-gray-600 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
               </div>
