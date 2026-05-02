@@ -111,6 +111,11 @@ export default function BotSettingsPage() {
             <SettingToggle label="Auto Read Story" desc="Lihat & react story otomatis" value={settings.auto_read_sw} onChange={v => update('auto_read_sw', v)} />
             <SettingToggle label="Anti Call" desc="Tolak otomatis panggilan" value={settings.anti_call} onChange={v => update('anti_call', v)} />
             <SettingToggle label="Anti Spam" desc="Proteksi dari spam" value={settings.anti_spam} onChange={v => update('anti_spam', v)} />
+            <SettingToggle label="Group Only" desc="Hanya merespon di grup" value={settings.group_only} onChange={v => update('group_only', v)} />
+<SettingToggle label="Private Only" desc="Hanya merespon di private chat" value={settings.private_only} onChange={v => update('private_only', v)} />
+<SettingToggle label="Owner Only" desc="Hanya merespon owner" value={settings.owner_only} onChange={v => update('owner_only', v)} />
+<SettingToggle label="Admin Only" desc="Hanya admin grup yang bisa" value={settings.admin_only} onChange={v => update('admin_only', v)} />
+<SettingToggle label="Premium Only" desc="Hanya user premium" value={settings.premium_only} onChange={v => update('premium_only', v)} />
           </>
         )}
 
