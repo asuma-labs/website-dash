@@ -3,6 +3,15 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export default async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  const isApiPath = pathname.startsWith('/api/')
+  const isAuthPath = pathname.startsWith('/auth/')
+  const isStaticFile = /\.(.*)$/.test(pathname)
+
+  if (isApiPath || isAuthPath || isStaticFile) {
+    return NextResponse.next()
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -24,20 +33,10 @@ export default async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
-  const pathname = request.nextUrl.pathname
   const token = request.cookies.get('auth_token')?.value
-
   const isLoggedIn = !!token
   const isLoginPage = pathname === '/login'
   const isHomePage = pathname === '/'
-  const isAuthPage = pathname.startsWith('/auth/')
-  const isApiPage = pathname.startsWith('/api/')
-  const isStaticFile = /\.(.*)$/.test(pathname)
-
-  if (isApiPage || isAuthPage || isStaticFile) {
-    return supabaseResponse
-  }
 
   if (isLoggedIn && (isLoginPage || isHomePage)) {
     const supabaseAdmin = createServerClient(
@@ -69,13 +68,12 @@ export default async function proxy(request: NextRequest) {
         .single()
 
       if (profile) {
-        const dashboardUrl = new URL(`/${profile.username}`, request.url)
-        return NextResponse.redirect(dashboardUrl)
+        return NextResponse.redirect(new URL(`/${profile.username}`, request.url))
       }
     }
   }
 
-  if (!isLoggedIn && !isLoginPage && !isHomePage && !isApiPage && !isAuthPage && !isStaticFile) {
+  if (!isLoggedIn && !isLoginPage && !isHomePage) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)
