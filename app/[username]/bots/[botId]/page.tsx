@@ -1,7 +1,6 @@
 // app/[username]/bots/[botId]/page.tsx
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -11,7 +10,6 @@ import { ArrowLeft, Settings, Users, BarChart3, StopCircle, Trash2, Loader2 } fr
 export default function BotDetailPage() {
   const { username, botId } = useParams() as { username: string; botId: string }
   const router = useRouter()
-  const supabase = createClient()
   const [bot, setBot] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [stopping, setStopping] = useState(false)
@@ -20,30 +18,24 @@ export default function BotDetailPage() {
 
   useEffect(() => {
     fetchBot()
-
-    const channel = supabase
-      .channel('bot-detail-' + botId)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'bot_instances', filter: `id=eq.${botId}` },
-        (payload: any) => setBot(payload.new)
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
+    const interval = setInterval(fetchBot, 5000)
+    return () => clearInterval(interval)
   }, [botId])
 
   const fetchBot = async () => {
-    const { data, error } = await supabase
-      .from('bot_instances')
-      .select('*')
-      .eq('id', botId)
-      .single()
+    try {
+      const res = await fetch(`/api/bots/${botId}`)
+      const data = await res.json()
 
-    if (error || !data) {
-      setError('Bot tidak ditemukan')
-    } else {
-      setBot(data)
+      if (!res.ok) {
+        setError(data.error || 'Bot tidak ditemukan')
+        setBot(null)
+      } else {
+        setBot(data.bot)
+        setError('')
+      }
+    } catch (err) {
+      setError('Gagal mengambil data bot')
     }
     setLoading(false)
   }
@@ -51,16 +43,15 @@ export default function BotDetailPage() {
   const stopBot = async () => {
     setStopping(true)
     await fetch(`/api/bots/${botId}/stop`, { method: 'POST' })
+    setTimeout(fetchBot, 1500)
     setStopping(false)
   }
 
   const deleteBot = async () => {
-    if (!confirm('Yakin hapus bot ini? Data tidak bisa dikembalikan.')) return
+    if (!confirm('Yakin hapus bot ini?')) return
     setDeleting(true)
     const res = await fetch(`/api/bots/${botId}/delete`, { method: 'DELETE' })
-    if (res.ok) {
-      router.push(`/${username}/bots`)
-    }
+    if (res.ok) router.push(`/${username}/bots`)
     setDeleting(false)
   }
 
@@ -75,9 +66,10 @@ export default function BotDetailPage() {
   if (error || !bot) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-400 text-lg mb-4">{error || 'Bot tidak ditemukan'}</p>
-        <Link href={`/${username}/bots`} className="text-emerald-400 hover:underline">
-          Kembali ke daftar bot
+        <p className="text-6xl mb-4">🤷</p>
+        <p className="text-gray-400 text-lg mb-2">{error || 'Bot tidak ditemukan'}</p>
+        <Link href={`/${username}/bots`} className="text-emerald-400 hover:underline text-sm">
+          ← Kembali ke daftar bot
         </Link>
       </div>
     )
@@ -91,7 +83,7 @@ export default function BotDetailPage() {
       </Link>
 
       <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-800/50 rounded-3xl p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl ${
               bot.status === 'connected' ? 'bg-emerald-500/20' :
@@ -104,7 +96,7 @@ export default function BotDetailPage() {
               <p className="text-gray-400">{bot.phone_number}</p>
             </div>
           </div>
-          <span className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 ${
+          <span className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 w-fit ${
             bot.status === 'connected' ? 'bg-emerald-500/10 text-emerald-400' :
             bot.status === 'pairing_code' ? 'bg-amber-500/10 text-amber-400' : 'bg-gray-500/10 text-gray-400'
           }`}>
@@ -136,19 +128,13 @@ export default function BotDetailPage() {
         </div>
 
         <div className="flex gap-3">
-          <button
-            onClick={stopBot}
-            disabled={stopping || bot.status !== 'connected'}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-2xl font-medium text-sm transition disabled:opacity-50"
-          >
+          <button onClick={stopBot} disabled={stopping || bot.status !== 'connected'}
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-2xl font-medium text-sm transition disabled:opacity-50">
             {stopping ? <Loader2 size={18} className="animate-spin" /> : <StopCircle size={18} />}
             Stop Bot
           </button>
-          <button
-            onClick={deleteBot}
-            disabled={deleting}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-2xl font-medium text-sm transition disabled:opacity-50"
-          >
+          <button onClick={deleteBot} disabled={deleting}
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-2xl font-medium text-sm transition disabled:opacity-50">
             {deleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
             Hapus Bot
           </button>
