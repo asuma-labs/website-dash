@@ -143,7 +143,7 @@ const signOut = async () => {
                     <div className="absolute inset-0 bg-blue-500/40 rounded-2xl blur-xl group-hover:blur-2xl group-hover:bg-blue-400/50 transition-all duration-500" />
                     <div className="relative w-12 h-12 bg-gradient-to-br from-blue-400 via-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/25 border border-white/15 overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/10 to-transparent" />
-                      <img src="/icons/android-chrome-192x192.png" alt="Asuma" className="w-7 h-7 relative z-10 drop-shadow-lg" />
+                      <img src="/icons/asuma.jpg" alt="Asuma" className="w-7 h-7 relative z-10 drop-shadow-lg" />
                     </div>
                     <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-gray-950 shadow-lg shadow-emerald-400/50" />
                   </div>
