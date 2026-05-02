@@ -20,14 +20,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ botI
 
   const { data: magicToken } = await supabase
     .from('magic_tokens')
-    .select('user_id')
+    .select('user_id, expires_at')
     .eq('token', token)
     .eq('used', false)
-    .gt('expires_at', new Date().toISOString())
     .single()
 
-  if (!magicToken) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!magicToken || new Date(magicToken.expires_at) < new Date()) {
+    return NextResponse.json({ error: 'Token expired' }, { status: 401 })
   }
 
   const { data: bot } = await supabase
@@ -40,8 +39,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ botI
     return NextResponse.json({ error: 'Bot tidak ditemukan' }, { status: 404 })
   }
 
+  // Cek kepemilikan
   if (bot.user_id !== magicToken.user_id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: 'Bukan bot milikmu' }, { status: 403 })
   }
 
   return NextResponse.json({
