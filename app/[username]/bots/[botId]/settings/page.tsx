@@ -107,7 +107,15 @@ function SettingToggle({ label, desc, value, onChange }: { label: string; desc: 
   )
 }
 
-function SettingInput({ label, value, onChange, type = 'text', placeholder, maxLength, className }: any) {
+function SettingInput({ label, value, onChange, type = 'text', placeholder, maxLength, className }: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  type?: string
+  placeholder?: string
+  maxLength?: number
+  className?: string
+}) {
   return (
     <div className="bg-gray-900/80 border border-gray-800/50 rounded-2xl p-4">
       <p className="font-medium mb-2">{label}</p>
