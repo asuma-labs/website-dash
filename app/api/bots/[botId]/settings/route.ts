@@ -1,25 +1,34 @@
 // app/api/bots/[botId]/settings/route.ts
-import { createServerSupabase } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+
+export async function GET(request: Request, { params }: { params: Promise<{ botId: string }> }) {
+  const { botId } = await params
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+
+  const { data: settings } = await supabase
+    .from('bot_settings')
+    .select('*')
+    .eq('bot_instance_id', botId)
+    .single()
+
+  return NextResponse.json({ settings })
+}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ botId: string }> }) {
   const { botId } = await params
-  const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: bot } = await supabase
-    .from('bot_instances')
-    .select('user_id')
-    .eq('id', botId)
-    .single()
-
-  if (!bot || bot.user_id !== user.id) {
-    return NextResponse.json({ error: 'Bot tidak ditemukan' }, { status: 404 })
-  }
-
   const body = await request.json()
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
 
   const { data: settings, error } = await supabase
     .from('bot_settings')
@@ -28,7 +37,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ bo
     .single()
 
   if (error) {
-    return NextResponse.json({ error: 'Gagal menyimpan settings' }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal menyimpan' }, { status: 500 })
   }
 
   await supabase.from('tasks').insert({
