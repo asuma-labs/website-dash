@@ -14,21 +14,19 @@ export default function Sidebar({ username }: { username: string }) {
   const router = useRouter()
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
-
+  const [profile, setProfile] = useState<any>(null)
   useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
 
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
+useEffect(() => {
+    const fetchProfile = async () => {
+      const res = await fetch('/api/auth/profile')
+      const data = await res.json()
+      if (data.profile) setProfile(data.profile)
     }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [mobileOpen])
+    fetchProfile()
+  }, [username])
 
 const signOut = async () => {
   await fetch('/api/auth/logout', { method: 'POST' })
