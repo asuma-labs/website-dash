@@ -5,6 +5,29 @@ import { cookies } from 'next/headers'
 import Sidebar from '@/components/Sidebar'
 import BottomNav from '@/components/BottomNav'
 import SessionSetter from '@/components/SessionSetter'
+import type { Metadata } from 'next'
+
+type Props = {
+  params: Promise<{ username: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { username } = await params
+
+  return {
+    title: `@${username}`,
+    description: `Dashboard bot WhatsApp @${username}. Kelola bot clone dan settings.`,
+    openGraph: {
+      title: `@${username} - Asuma MD Dashboard`,
+      description: `Dashboard bot WhatsApp @${username}.`,
+      url: `https://dash.asuma.my.id/${username}`,
+    },
+    robots: {
+      index: false, // jangan index halaman user
+      follow: false,
+    },
+  }
+}
 
 export default async function UsernameLayout({
   children,
