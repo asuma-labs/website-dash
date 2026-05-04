@@ -1,6 +1,7 @@
 // app/[username]/bots/[botId]/page.tsx
 'use client'
 
+import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -10,6 +11,7 @@ import { ArrowLeft, Settings, Users, BarChart3, StopCircle, Trash2, Loader2 } fr
 export default function BotDetailPage() {
   const { username, botId } = useParams() as { username: string; botId: string }
   const router = useRouter()
+  const supabase = createClient()
   const [bot, setBot] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [stopping, setStopping] = useState(false)
@@ -18,8 +20,17 @@ export default function BotDetailPage() {
 
   useEffect(() => {
     fetchBot()
-    const interval = setInterval(fetchBot, 5000)
-    return () => clearInterval(interval)
+
+    const channel = supabase
+      .channel('bot-detail-' + botId)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'bot_instances', filter: `id=eq.${botId}` },
+        (payload: any) => setBot(payload.new)
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [botId])
 
   const fetchBot = async () => {
@@ -68,9 +79,7 @@ export default function BotDetailPage() {
       <div className="text-center py-20">
         <p className="text-6xl mb-4">🤷</p>
         <p className="text-gray-400 text-lg mb-2">{error || 'Bot tidak ditemukan'}</p>
-        <Link href={`/${username}/bots`} className="text-emerald-400 hover:underline text-sm">
-          ← Kembali ke daftar bot
-        </Link>
+        <Link href={`/${username}/bots`} className="text-emerald-400 hover:underline text-sm">← Kembali ke daftar bot</Link>
       </div>
     )
   }
@@ -93,7 +102,7 @@ export default function BotDetailPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">{bot.bot_name || 'Asuma Bot'}</h1>
-              <p className="text-gray-400">{bot.phone_number}</p>
+              <p className="text-gray-400">{bot.phone_number.slice(0, 4)}****{bot.phone_number.slice(-3)}</p>
             </div>
           </div>
           <span className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 w-fit ${
