@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
   "framework": "nextjs",
   "cleanUrls": true,
   "trailingSlash": false,
-
   "headers": [
     {
       "source": "/(.*)",
@@ -35,7 +35,6 @@
       ]
     }
   ],
-
   "redirects": [
     {
       "source": "/grup",
@@ -51,10 +50,21 @@
       "source": "/channel",
       "destination": "https://whatsapp.com/channel/XXXXXXXX",
       "permanent": false
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "asuma.my.id"
+        }
+      ],
+      "destination": "https://www.asuma.my.id/$1",
+      "permanent": true
     }
   ],
-
   "images": {
+    "sizes": [256, 384, 640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     "remotePatterns": [
       {
         "protocol": "https",
