@@ -1,74 +1,56 @@
 // app/[username]/page.tsx
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import useSWR from 'swr'
+import { createClient } from '@/lib/supabase/client'
+import { fetchAllBots } from '@/lib/fetcher'
 import { Zap, Bot, Activity, Plus, ArrowRight, Sparkles, Waves } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function DashboardPage() {
   const { username } = useParams() as { username: string }
   const supabase = createClient()
-  const [allBots, setAllBots] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [userId, setUserId] = useState<string | null>(null)
-  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  const {
+    data: allBots = [],
+    error,
+    isLoading,
+    mutate,
+  } = useSWR('all-bots', fetchAllBots, {
+    revalidateOnFocus: false,
+    dedupingInterval: 5000,
+    fallbackData: [],
+  })
 
   useEffect(() => {
-    const init = async () => {
-      const { data: sessionData } = await supabase.auth.getSession()
-      if (sessionData?.session?.user?.id) {
-        setUserId(sessionData.session.user.id)
-        fetchAll()
-      } else {
-        setTimeout(init, 500)
-      }
-    }
-    init()
-
     const channel = supabase
       .channel('home-bots')
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'bot_instances' },
-        () => {
-          if (debounceRef.current) clearTimeout(debounceRef.current)
-          debounceRef.current = setTimeout(fetchAll, 5000)
-        }
+        () => mutate()
       )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
-      if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [])
+  }, [mutate])
 
-  const fetchAll = async () => {
-    const { data: sessionData } = await supabase.auth.getSession()
-    const uid = sessionData?.session?.user?.id
-
-    const { data: all } = await supabase
-      .from('bot_instances')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (all) {
-      const myBots = all.filter(b => b.user_id === uid)
-      const otherBots = all.filter(b => b.user_id !== uid)
-      setAllBots([...myBots, ...otherBots])
-    }
-    setLoading(false)
-  }
+  const { data: session } = useSWR('session', () =>
+    supabase.auth.getSession().then(d => d.data.session)
+  )
+  const userId = session?.user?.id
 
   const myBots = allBots.filter(b => b.user_id === userId)
   const activeBots = myBots.filter(b => b.status === 'connected').length
   const pairingBots = myBots.filter(b => b.status === 'pairing_code').length
   const totalBots = myBots.length
 
-  if (loading) {
+  if (isLoading && !allBots.length) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <motion.div
@@ -209,13 +191,16 @@ export default function DashboardPage() {
                           : 'bg-gray-500/10'
                       }`}
                     >
-                      <Bot size={20} className={
-                        isMine
-                          ? bot.status === 'connected'
-                            ? 'text-cyan-400'
-                            : 'text-gray-400'
-                          : 'text-gray-500'
-                      } />
+                      <Bot
+                        size={20}
+                        className={
+                          isMine
+                            ? bot.status === 'connected'
+                              ? 'text-cyan-400'
+                              : 'text-gray-400'
+                            : 'text-gray-500'
+                        }
+                      />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
