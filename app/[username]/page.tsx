@@ -2,7 +2,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Zap, Bot, Activity, Plus, ArrowRight, Sparkles, Waves } from 'lucide-react'
@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [allBots, setAllBots] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -29,11 +30,19 @@ export default function DashboardPage() {
 
     const channel = supabase
       .channel('home-bots')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bot_instances' }, fetchAll)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'bot_instances' },
+        () => {
+          if (debounceRef.current) clearTimeout(debounceRef.current)
+          debounceRef.current = setTimeout(fetchAll, 5000)
+        }
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
+      if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [])
 
@@ -149,7 +158,7 @@ export default function DashboardPage() {
           </h2>
           {allBots.length > 0 && (
             <Link
-              href={`/${username}/bots`}
+              href={`/${username}/explore`}
               className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1 transition-colors group"
             >
               Lihat Semua
@@ -192,7 +201,7 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                         isMine
                           ? bot.status === 'connected'
                             ? 'bg-cyan-500/20 shadow-lg shadow-cyan-500/10'
@@ -200,7 +209,13 @@ export default function DashboardPage() {
                           : 'bg-gray-500/10'
                       }`}
                     >
-                      🤖
+                      <Bot size={20} className={
+                        isMine
+                          ? bot.status === 'connected'
+                            ? 'text-cyan-400'
+                            : 'text-gray-400'
+                          : 'text-gray-500'
+                      } />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -218,12 +233,12 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border ${
                         bot.status === 'connected'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                           : bot.status === 'pairing_code'
-                          ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
-                          : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                          ? 'bg-sky-500/10 text-sky-400 border-sky-500/20'
+                          : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
                       }`}
                     >
                       <span
@@ -239,7 +254,7 @@ export default function DashboardPage() {
                         ? 'Active'
                         : bot.status === 'pairing_code'
                         ? 'Pairing'
-                        : bot.status || 'Unknown'}
+                        : bot.status || 'Offline'}
                     </span>
                     <ArrowRight
                       size={16}
