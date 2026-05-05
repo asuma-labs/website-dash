@@ -1,15 +1,13 @@
 // app/auth/magic/page.tsx
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CheckCircle, XCircle, Loader2, LogIn, ArrowLeft } from 'lucide-react'
+import { CheckCircle, XCircle, LogIn, ArrowLeft, Loader2, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 function MagicContent() {
-  const supabase = createClient()
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
@@ -29,6 +27,7 @@ function MagicContent() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),
+          credentials: 'include',
         })
 
         const data = await res.json()
@@ -39,23 +38,12 @@ function MagicContent() {
           return
         }
 
-        if (!data.access_token) {
-          setStatus('error')
-          setMessage('Gagal mendapatkan session')
-          return
-        }
-
-        await supabase.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-        })
-
         setStatus('success')
         setMessage('Login berhasil! Mengalihkan...')
 
         setTimeout(() => {
           window.location.href = `/${data.username}`
-        }, 1000)
+        }, 800)
       } catch (err) {
         setStatus('error')
         setMessage('Gagal menghubungi server')
@@ -72,18 +60,23 @@ function MagicContent() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            className="relative inline-block mb-6"
-          >
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 p-[2px]">
+          <div className="relative inline-flex items-center justify-center mb-6">
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+              className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 p-[2px]"
+            >
               <div className="w-full h-full rounded-2xl bg-gray-950 flex items-center justify-center">
-                <Loader2 size={32} className="text-cyan-400 animate-pulse" />
+                <Loader2 size={32} className="text-cyan-400" />
               </div>
-            </div>
-            <div className="absolute -inset-3 bg-blue-500/20 rounded-3xl blur-xl animate-pulse" />
-          </motion.div>
+            </motion.div>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+              className="absolute -inset-1 rounded-2xl border-2 border-transparent border-t-cyan-400/30 border-r-cyan-400/30"
+            />
+            <div className="absolute -inset-3 bg-blue-500/15 rounded-3xl blur-xl animate-pulse" />
+          </div>
           <p className="text-white text-lg font-medium">{message}</p>
           <p className="text-gray-500 text-sm mt-2">Mohon tunggu sebentar</p>
         </motion.div>
@@ -109,7 +102,7 @@ function MagicContent() {
           <p className="text-gray-500 text-sm mb-6">Silakan coba login ulang atau minta token baru</p>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl font-semibold text-sm text-white hover:shadow-lg hover:shadow-blue-500/25 transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl font-semibold text-sm text-white hover:shadow-lg hover:shadow-blue-500/25 transition-all hover:scale-105 active:scale-95"
           >
             <ArrowLeft size={16} />
             Kembali ke Login
@@ -128,23 +121,21 @@ function MagicContent() {
             transition={{ type: 'spring', delay: 0.1 }}
             className="relative inline-block mb-6"
           >
-            <div className="absolute inset-0 bg-cyan-500/30 rounded-full blur-2xl" />
+            <div className="absolute inset-0 bg-cyan-500/25 rounded-full blur-2xl" />
             <div className="relative w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/25">
               <CheckCircle size={40} className="text-white" />
             </div>
           </motion.div>
           <p className="text-white text-lg font-medium">{message}</p>
           <div className="flex justify-center mt-4">
-            <motion.div
-              className="w-32 h-1 bg-white/[0.06] rounded-full overflow-hidden"
-            >
+            <div className="w-32 h-1 bg-white/[0.06] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: '0%' }}
                 animate={{ width: '100%' }}
-                transition={{ duration: 1, ease: 'easeInOut' }}
+                transition={{ duration: 0.8, ease: 'easeInOut' }}
                 className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
               />
-            </motion.div>
+            </div>
           </div>
         </motion.div>
       )}
@@ -193,11 +184,18 @@ export default function MagicPage() {
             <Suspense
               fallback={
                 <div className="text-center py-8">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    className="w-12 h-12 border-2 border-blue-500/30 border-t-blue-500 rounded-full mx-auto mb-4"
-                  />
+                  <div className="relative inline-flex items-center justify-center mb-4">
+                    <motion.div
+                      animate={{ rotate: -360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 p-[2px]"
+                    >
+                      <div className="w-full h-full rounded-2xl bg-gray-950 flex items-center justify-center">
+                        <Sparkles size={24} className="text-cyan-400" />
+                      </div>
+                    </motion.div>
+                    <div className="absolute -inset-2 bg-blue-500/20 rounded-3xl blur-xl animate-pulse" />
+                  </div>
                   <p className="text-gray-400 text-sm">Loading...</p>
                 </div>
               }
