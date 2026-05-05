@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     secure: true,
     sameSite: 'lax',
     path: '/',
+    domain: '.asuma.my.id', // ← SAMA
     maxAge: 0,
   })
 
