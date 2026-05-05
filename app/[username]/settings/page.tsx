@@ -1,12 +1,13 @@
 // app/[username]/settings/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { motion } from 'framer-motion'
 import {
   Bell, Shield, User, Palette, Smartphone, Globe,
-  Trash2, LogOut, ChevronRight, CheckCircle, Copy, Loader2,
+  Trash2, LogOut, ChevronRight, CheckCircle, Copy, Loader2, Sun, Moon, Monitor,
   type LucideIcon
 } from 'lucide-react'
 import PushNotificationToggle from '@/components/PushNotificationToggle'
@@ -14,11 +15,12 @@ import Image from 'next/image'
 
 type SettingItem = {
   label: string
-  value: string
+  value?: string
   icon: LucideIcon
   iconClass: string
   action?: () => void
   badge?: boolean
+  component?: React.ReactNode
 }
 
 type SettingSection = {
@@ -32,8 +34,12 @@ type SettingSection = {
 export default function SettingsPage() {
   const { username } = useParams() as { username: string }
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => setMounted(true), [])
 
   const handleLogout = async () => {
     setLoggingOut(true)
@@ -46,6 +52,14 @@ export default function SettingsPage() {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  const themeOptions = [
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'system', label: 'System', icon: Monitor },
+  ]
+
+  if (!mounted) return null
 
   const settingsSections: SettingSection[] = [
     {
@@ -76,16 +90,41 @@ export default function SettingsPage() {
       component: <PushNotificationToggle />,
     },
     {
-      title: 'Preferensi',
+      title: 'Tampilan',
       icon: Palette,
       iconColor: 'text-sky-400',
       items: [
         {
           label: 'Tema',
-          value: 'Dark',
-          icon: Palette,
+          value: themeOptions.find(t => t.value === theme)?.label || 'Dark',
+          icon: themeOptions.find(t => t.value === theme)?.icon || Moon,
           iconClass: 'text-gray-500',
+          component: (
+            <div className="flex gap-1 bg-gray-800 rounded-xl p-1 mt-2">
+              {themeOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setTheme(opt.value)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                    theme === opt.value
+                      ? 'bg-emerald-600 text-white shadow-lg'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <opt.icon size={14} />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          ),
         },
+      ],
+    },
+    {
+      title: 'Preferensi',
+      icon: Globe,
+      iconColor: 'text-teal-400',
+      items: [
         {
           label: 'Bahasa',
           value: 'Indonesia',
@@ -97,7 +136,7 @@ export default function SettingsPage() {
     {
       title: 'Perangkat',
       icon: Smartphone,
-      iconColor: 'text-teal-400',
+      iconColor: 'text-emerald-400',
       items: [
         {
           label: 'Session',
@@ -170,23 +209,25 @@ export default function SettingsPage() {
               {section.items && (
                 <div className="pl-12 space-y-2">
                   {section.items.map((item) => (
-                    <div
-                      key={item.label}
-                      className={`flex items-center justify-between py-2 ${item.action ? 'cursor-pointer hover:opacity-80' : ''}`}
-                      onClick={item.action}
-                    >
-                      <div className="flex items-center gap-3">
-                        <item.icon size={15} className={item.iconClass} />
-                        <span className="text-sm text-gray-400">{item.label}</span>
+                    <div key={item.label}>
+                      <div
+                        className={`flex items-center justify-between py-2 ${item.action ? 'cursor-pointer hover:opacity-80' : ''}`}
+                        onClick={item.action}
+                      >
+                        <div className="flex items-center gap-3">
+                          <item.icon size={15} className={item.iconClass} />
+                          <span className="text-sm text-gray-400">{item.label}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {item.value && <span className="text-sm font-medium">{item.value}</span>}
+                          {item.badge && (
+                            <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 text-[10px] font-medium border border-amber-500/20">
+                              PRO
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{item.value}</span>
-                        {item.badge && (
-                          <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 text-[10px] font-medium border border-amber-500/20">
-                            PRO
-                          </span>
-                        )}
-                      </div>
+                      {item.component && <div className="pb-2">{item.component}</div>}
                     </div>
                   ))}
                 </div>
