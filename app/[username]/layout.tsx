@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import Sidebar from '@/components/Sidebar'
 import BottomNav from '@/components/BottomNav'
 import SessionSetter from '@/components/SessionSetter'
+import NotificationPermissionModal from '@/components/NotificationPermissionModal'
 import type { Metadata } from 'next'
 
 type Props = {
@@ -13,7 +14,6 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params
-
   return {
     title: `@${username}`,
     description: `Dashboard bot WhatsApp @${username}. Kelola bot clone dan settings.`,
@@ -22,10 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: `Dashboard bot WhatsApp @${username}.`,
       url: `https://dash.asuma.my.id/${username}`,
     },
-    robots: {
-      index: false, // jangan index halaman user
-      follow: false,
-    },
+    robots: { index: false, follow: false },
   }
 }
 
@@ -82,6 +79,7 @@ export default async function UsernameLayout({
         </main>
       </div>
       <BottomNav username={profile.username} />
+      <NotificationPermissionModal />
     </div>
   )
 }
