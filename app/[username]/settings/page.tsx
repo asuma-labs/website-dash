@@ -5,21 +5,29 @@ import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
-  Bell,
-  Shield,
-  User,
-  Palette,
-  Smartphone,
-  Globe,
-  Trash2,
-  LogOut,
-  ChevronRight,
-  CheckCircle,
-  Copy,
-  Loader2,
+  Bell, Shield, User, Palette, Smartphone, Globe,
+  Trash2, LogOut, ChevronRight, CheckCircle, Copy, Loader2,
+  type LucideIcon
 } from 'lucide-react'
 import PushNotificationToggle from '@/components/PushNotificationToggle'
 import Image from 'next/image'
+
+type SettingItem = {
+  label: string
+  value: string
+  icon: LucideIcon
+  iconClass: string
+  action?: () => void
+  badge?: boolean
+}
+
+type SettingSection = {
+  title: string
+  icon: LucideIcon
+  iconColor: string
+  items?: SettingItem[]
+  component?: React.ReactNode
+}
 
 export default function SettingsPage() {
   const { username } = useParams() as { username: string }
@@ -39,7 +47,7 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const settingsSections = [
+  const settingsSections: SettingSection[] = [
     {
       title: 'Akun',
       icon: User,
