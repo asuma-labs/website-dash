@@ -2,62 +2,101 @@
 'use client'
 
 import { useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { User, Shield, Bell, Palette, ChevronRight, Copy, Check } from 'lucide-react'
-
-// Fix TypeScript: definisikan tipe untuk setiap aksi
-type SettingItem = 
-  | { label: string; value: string; copyValue: string; type: 'copy' }
-  | { label: string; type: 'navigate'; href: string }
-  | { label: string; type: 'toggle'; toggleValue: boolean; onChange?: () => void }
-
-type SettingSection = {
-  title: string
-  icon: any
-  items: SettingItem[]
-}
+import {
+  Bell,
+  Shield,
+  User,
+  Palette,
+  Smartphone,
+  Globe,
+  Trash2,
+  LogOut,
+  ChevronRight,
+  CheckCircle,
+  Copy,
+  Loader2,
+} from 'lucide-react'
+import PushNotificationToggle from '@/components/PushNotificationToggle'
+import Image from 'next/image'
 
 export default function SettingsPage() {
   const { username } = useParams() as { username: string }
-  const [copied, setCopied] = useState<string | null>(null)
-  const [darkMode, setDarkMode] = useState(true)
+  const router = useRouter()
+  const [loggingOut, setLoggingOut] = useState(false)
+  const [copied, setCopied] = useState(false)
 
-  const copyToClipboard = async (text: string, label: string) => {
-    await navigator.clipboard.writeText(text)
-    setCopied(label)
-    setTimeout(() => setCopied(null), 2000)
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push('/login')
   }
 
-  const settingsSections: SettingSection[] = [
+  const copyUsername = () => {
+    navigator.clipboard.writeText(username)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const settingsSections = [
     {
       title: 'Akun',
       icon: User,
+      iconColor: 'text-blue-400',
       items: [
-        { label: 'Username', value: `@${username}`, copyValue: username, type: 'copy' },
-        { label: 'Dashboard URL', value: `dash.asuma.my.id/${username}`, copyValue: `https://dash.asuma.my.id/${username}`, type: 'copy' },
-      ],
-    },
-    {
-      title: 'Keamanan',
-      icon: Shield,
-      items: [
-        { label: 'Ganti Password', type: 'navigate', href: `/${username}/settings/password` },
+        {
+          label: 'Username',
+          value: `@${username}`,
+          action: copyUsername,
+          icon: copied ? CheckCircle : Copy,
+          iconClass: copied ? 'text-cyan-400' : 'text-gray-500',
+        },
+        {
+          label: 'Role',
+          value: 'Premium',
+          icon: Shield,
+          iconClass: 'text-amber-400',
+          badge: true,
+        },
       ],
     },
     {
       title: 'Notifikasi',
       icon: Bell,
+      iconColor: 'text-cyan-400',
+      component: <PushNotificationToggle />,
+    },
+    {
+      title: 'Preferensi',
+      icon: Palette,
+      iconColor: 'text-sky-400',
       items: [
-        { label: 'Bot Connected', type: 'toggle', toggleValue: true },
-        { label: 'Bot Disconnected', type: 'toggle', toggleValue: false },
+        {
+          label: 'Tema',
+          value: 'Dark',
+          icon: Palette,
+          iconClass: 'text-gray-500',
+        },
+        {
+          label: 'Bahasa',
+          value: 'Indonesia',
+          icon: Globe,
+          iconClass: 'text-gray-500',
+        },
       ],
     },
     {
-      title: 'Tampilan',
-      icon: Palette,
+      title: 'Perangkat',
+      icon: Smartphone,
+      iconColor: 'text-teal-400',
       items: [
-        { label: 'Dark Mode', type: 'toggle', toggleValue: darkMode, onChange: () => setDarkMode(!darkMode) },
+        {
+          label: 'Session',
+          value: 'Aktif',
+          icon: Smartphone,
+          iconClass: 'text-emerald-400',
+        },
       ],
     },
   ]
@@ -69,88 +108,122 @@ export default function SettingsPage() {
       className="max-w-2xl mx-auto space-y-6"
     >
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-gray-500 text-sm mt-1">Kelola akun dan preferensi kamu</p>
+        <h1 className="text-3xl font-bold">Settings</h1>
+        <p className="text-gray-500 mt-2">Kelola akun dan preferensi bot Anda</p>
       </div>
 
-      {settingsSections.map((section, i) => (
-        <motion.div
-          key={section.title}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.1 }}
-          className="bg-gray-900/80 backdrop-blur-xl border border-gray-800/50 rounded-2xl overflow-hidden"
-        >
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-800/50">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-              <section.icon size={16} className="text-emerald-400" />
+      <div className="relative bg-gray-900/80 backdrop-blur-xl border border-white/[0.06] rounded-3xl p-6 overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative flex items-center gap-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-blue-500/30 rounded-2xl blur-lg" />
+            <div className="relative w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/10 overflow-hidden">
+              <Image
+                src="/icons/android-chrome-192x192.png"
+                alt="Profile"
+                width={64}
+                height={64}
+                className="w-full h-full object-cover"
+                unoptimized
+              />
             </div>
-            <h2 className="font-semibold text-sm">{section.title}</h2>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-gray-950 shadow-lg shadow-emerald-400/50 animate-pulse" />
           </div>
-
-          <div>
-            {section.items.map((item, j) => (
-              <div
-                key={item.label}
-                className={`flex items-center justify-between px-5 py-4 ${
-                  j !== section.items.length - 1 ? 'border-b border-gray-800/30' : ''
-                }`}
-              >
-                <div>
-                  <p className="text-sm font-medium">{item.label}</p>
-                  {item.type === 'copy' && (
-                    <p className="text-xs text-gray-500 mt-0.5 font-mono truncate max-w-[200px]">{item.value}</p>
-                  )}
-                </div>
-
-                {item.type === 'copy' && (
-                  <button
-                    onClick={() => copyToClipboard(item.copyValue!, item.label)}
-                    className="flex items-center gap-2 text-xs text-gray-400 hover:text-emerald-400 transition"
-                  >
-                    {copied === item.label ? (
-                      <>
-                        <Check size={14} className="text-emerald-400" />
-                        <span className="text-emerald-400">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={14} />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
-                )}
-
-                {item.type === 'navigate' && (
-                  <a href={item.href} className="text-gray-400 hover:text-emerald-400 transition">
-                    <ChevronRight size={18} />
-                  </a>
-                )}
-
-                {item.type === 'toggle' && (
-                  <button
-                    onClick={item.onChange}
-                    className={`w-12 h-7 rounded-full transition relative ${
-                      item.toggleValue ? 'bg-emerald-500' : 'bg-gray-600'
-                    }`}
-                  >
-                    <motion.div
-                      animate={{ left: item.toggleValue ? '1.75rem' : '0.25rem' }}
-                      className="w-5 h-5 bg-white rounded-full absolute top-1 shadow-md"
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    />
-                  </button>
-                )}
-              </div>
-            ))}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold">@{username}</h2>
+            <p className="text-sm text-gray-400">Premium Member</p>
           </div>
-        </motion.div>
-      ))}
-
-      <div className="text-center text-xs text-gray-600 py-4">
-        Asuma MD v1.0.0 • Made with ❤️
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+            <Shield size={18} className="text-white" />
+          </div>
+        </div>
       </div>
+
+      <div className="space-y-4">
+        {settingsSections.map((section, idx) => (
+          <motion.div
+            key={section.title}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 * idx }}
+            className="relative bg-gray-900/80 backdrop-blur-xl border border-white/[0.06] rounded-3xl p-6 overflow-hidden"
+          >
+            <div className="absolute -top-10 -left-10 w-20 h-20 bg-blue-500/3 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
+                  <section.icon size={18} className={section.iconColor} />
+                </div>
+                <h3 className="font-semibold">{section.title}</h3>
+              </div>
+              {section.component && (
+                <div className="pl-12">{section.component}</div>
+              )}
+              {section.items && (
+                <div className="pl-12 space-y-2">
+                  {section.items.map((item) => (
+                    <div
+                      key={item.label}
+                      className={`flex items-center justify-between py-2 ${item.action ? 'cursor-pointer hover:opacity-80' : ''}`}
+                      onClick={item.action}
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon size={15} className={item.iconClass} />
+                        <span className="text-sm text-gray-400">{item.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{item.value}</span>
+                        {item.badge && (
+                          <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 text-[10px] font-medium border border-amber-500/20">
+                            PRO
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="relative bg-red-500/5 border border-red-500/15 rounded-3xl p-6 overflow-hidden"
+      >
+        <div className="absolute -top-10 -right-10 w-20 h-20 bg-red-500/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="relative space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+              <Trash2 size={18} className="text-red-400" />
+            </div>
+            <h3 className="font-semibold text-red-400">Danger Zone</h3>
+          </div>
+          <div className="pl-12 space-y-2">
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-all disabled:opacity-50 group"
+            >
+              <span className="flex items-center gap-3 text-sm font-medium">
+                {loggingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+                {loggingOut ? 'Logging out...' : 'Logout'}
+              </span>
+              <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+            </button>
+            <p className="text-[10px] text-red-400/50 px-4">
+              Anda akan keluar dari semua sesi dan perlu login ulang untuk mengakses dashboard.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      <p className="text-center text-xs text-gray-600 pb-8">
+        Asuma MD v2.0 — Powered by Asuma Bot
+      </p>
     </motion.div>
   )
 }
