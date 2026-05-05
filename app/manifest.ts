@@ -1,12 +1,14 @@
+// app/manifest.ts
 import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: 'asuma-bot',
-    name: 'Asuma Bot - WhatsApp Multi Device',
-    short_name: 'Asuma Bot',
-    description: 'Jadibot WhatsApp Premium • Pairing Code Instan • 1000+ Fitur • Selalu Online 24 Jam • Downloader IG, TikTok & YouTube',
-    
+    name: 'Asuma MD - WhatsApp Multi Device',
+    short_name: 'Asuma MD',
+    description:
+      'Bot WhatsApp Premium dengan Pairing Code Instan, 1000+ Fitur, Online 24 Jam, Downloader IG/TikTok/YouTube',
+
     start_url: '/',
     scope: '/',
     display: 'standalone',
@@ -15,8 +17,8 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: 'id',
     dir: 'ltr',
 
-    background_color: '#0f172a',
-    theme_color: '#4f46e5',
+    background_color: '#030712',
+    theme_color: '#2563eb',
     categories: ['productivity', 'utilities', 'communication', 'business', 'social'],
 
     icons: [
@@ -24,11 +26,13 @@ export default function manifest(): MetadataRoute.Manifest {
         src: '/icons/android-chrome-192x192.png',
         sizes: '192x192',
         type: 'image/png',
+        purpose: 'any',
       },
       {
         src: '/icons/android-chrome-512x512.png',
         sizes: '512x512',
         type: 'image/png',
+        purpose: 'any',
       },
       {
         src: '/icons/android-chrome-192x192.png',
@@ -42,40 +46,21 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
         purpose: 'maskable',
       },
-      {
-        src: '/icons/icon-256x256.png',
-        sizes: '256x256',
-        type: 'image/png',
-      },
     ],
 
     shortcuts: [
       {
         name: 'Dashboard',
         short_name: 'Dashboard',
-        url: '/dashboard',
+        url: '/login',
         description: 'Kelola semua bot Anda',
         icons: [{ src: '/icons/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' }],
       },
       {
-        name: 'Jadibot Baru',
-        short_name: 'Jadibot',
-        url: '/jadibot',
+        name: 'Buat Bot Baru',
+        short_name: 'Buat Bot',
+        url: '/login',
         description: 'Buat bot WhatsApp dalam 10 detik',
-        icons: [{ src: '/icons/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' }],
-      },
-      {
-        name: 'Pricing & Paket',
-        short_name: 'Pricing',
-        url: '/pricing',
-        description: 'Lihat paket premium',
-        icons: [{ src: '/icons/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' }],
-      },
-      {
-        name: 'Status Server',
-        short_name: 'Status',
-        url: '/status',
-        description: 'Cek server & uptime',
         icons: [{ src: '/icons/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' }],
       },
     ],
