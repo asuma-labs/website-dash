@@ -23,11 +23,11 @@ export async function POST(request: Request) {
   }
 
   if (magicToken.used) {
-    return NextResponse.json({ error: 'Token sudah digunakan. Silakan minta link baru.' }, { status: 401 })
+    return NextResponse.json({ error: 'Token sudah digunakan' }, { status: 401 })
   }
 
   if (new Date(magicToken.expires_at) < new Date()) {
-    return NextResponse.json({ error: 'Token kadaluarsa. Silakan minta link baru.' }, { status: 401 })
+    return NextResponse.json({ error: 'Token kadaluarsa' }, { status: 401 })
   }
 
   const { data: profile } = await supabase
@@ -57,17 +57,10 @@ export async function POST(request: Request) {
     })
 
     if (createError) {
-      console.error('Create auth user error:', createError)
       return NextResponse.json({ error: 'Gagal membuat sesi' }, { status: 500 })
     }
   } else {
-    const { error: updateError } = await supabase.auth.admin.updateUserById(profile.id, {
-      password,
-    })
-
-    if (updateError) {
-      console.error('Update auth user error:', updateError)
-    }
+    await supabase.auth.admin.updateUserById(profile.id, { password })
   }
 
   const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -76,14 +69,29 @@ export async function POST(request: Request) {
   })
 
   if (signInError || !signInData?.session) {
-    console.error('Sign in error:', signInError)
     return NextResponse.json({ error: 'Gagal login' }, { status: 500 })
   }
 
-  return NextResponse.json({
+  const loginToken = crypto.randomUUID()
+
+  await supabase.from('magic_tokens').insert({
+    user_id: profile.id,
+    token: loginToken,
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  })
+
+  const response = NextResponse.json({
     success: true,
     username: profile.username,
-    access_token: signInData.session.access_token,
-    refresh_token: signInData.session.refresh_token,
   })
+
+  response.cookies.set('auth_token', loginToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+  })
+
+  return response
 }
