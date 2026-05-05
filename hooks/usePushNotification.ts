@@ -16,7 +16,6 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export function usePushNotification() {
   const [isSubscribed, setIsSubscribed] = useState(false)
-  const [subscription, setSubscription] = useState<PushSubscription | null>(null)
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [loading, setLoading] = useState(false)
 
@@ -30,65 +29,78 @@ export function usePushNotification() {
   const checkSubscription = async () => {
     if (!('serviceWorker' in navigator)) return
     const registration = await navigator.serviceWorker.ready
-    const sub = await registration.pushManager.getSubscription()
-    if (sub) {
-      setSubscription(sub)
-      setIsSubscribed(true)
-    }
+    const subscription = await registration.pushManager.getSubscription()
+    setIsSubscribed(!!subscription)
   }
 
-  const subscribe = async () => {
+  const subscribe = async (): Promise<boolean> => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      alert('Browser kamu tidak mendukung push notification')
+      console.warn('Push Notification tidak didukung')
       return false
     }
 
     setLoading(true)
-    const permission = await Notification.requestPermission()
-    setPermission(permission)
 
-    if (permission !== 'granted') {
-      setLoading(false)
-      return false
-    }
+    try {
+      const permission = await Notification.requestPermission()
+      setPermission(permission)
 
-    const registration = await navigator.serviceWorker.ready
-    let sub = await registration.pushManager.getSubscription()
+      if (permission !== 'granted') {
+        setLoading(false)
+        return false
+      }
 
-    if (!sub) {
-      sub = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
-        ),
-      })
-    }
+      const registration = await navigator.serviceWorker.ready
+      let subscription = await registration.pushManager.getSubscription()
 
-    setSubscription(sub)
-    setIsSubscribed(true)
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+          ),
+        })
+      }
 
-    await fetch('/api/push/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(sub),
-    })
-
-    setLoading(false)
-    return true
-  }
-
-  const unsubscribe = async () => {
-    if (subscription) {
-      await subscription.unsubscribe()
-      await fetch('/api/push/unsubscribe', {
+      await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(subscription),
       })
-      setIsSubscribed(false)
-      setSubscription(null)
+
+      setIsSubscribed(true)
+      setLoading(false)
+      return true
+    } catch (error) {
+      console.error('Subscribe error:', error)
+      setLoading(false)
+      return false
     }
   }
 
-  return { isSubscribed, subscription, permission, loading, subscribe, unsubscribe }
+  const unsubscribe = async () => {
+    setLoading(true)
+
+    try {
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.getSubscription()
+
+      if (subscription) {
+        await subscription.unsubscribe()
+        await fetch('/api/push/unsubscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: subscription.endpoint }),
+        })
+      }
+
+      setIsSubscribed(false)
+    } catch (error) {
+      console.error('Unsubscribe error:', error)
+    }
+
+    setLoading(false)
+  }
+
+  return { isSubscribed, permission, loading, subscribe, unsubscribe }
 }
