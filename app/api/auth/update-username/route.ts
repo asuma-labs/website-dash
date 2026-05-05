@@ -2,6 +2,18 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
+const reservedWords = [
+  'admin', 'moderator', 'staff', 'owner', 'root', 'system', 'bot', 'asuma',
+  'whatsapp', 'wa', 'wabot', 'api', 'auth', 'login', 'logout', 'register',
+  'dashboard', 'settings', 'profile', 'account', 'test', 'demo', 'guest',
+  'user', 'users', 'support', 'help', 'info', 'contact', 'about', 'privacy',
+  'select', 'insert', 'update', 'delete', 'drop', 'create', 'alter',
+  'script', 'alert', 'cookie', 'session', 'token', 'password',
+  'explore', 'jadibot', 'pricing', 'status', 'offline', 'chat', 'stats',
+  'sitemap', 'robots', 'manifest', 'new', 'edit', 'view', 'list', 'all',
+  'anjing', 'bangsat', 'kontol', 'memek', 'ngentot', 'jancok', 'babi', 'tolol',
+]
+
 export async function PATCH(request: Request) {
   const cookieStore = request.headers.get('cookie') || ''
   const token = cookieStore.match(/auth_token=([^;]+)/)?.[1]
@@ -30,7 +42,6 @@ export async function PATCH(request: Request) {
 
   if (!profile) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-  // Cek limit: 1x per bulan
   if (profile.username_changed_at) {
     const lastChange = new Date(profile.username_changed_at)
     const nextAllowed = new Date(lastChange)
@@ -45,7 +56,6 @@ export async function PATCH(request: Request) {
   }
 
   const { newUsername } = await request.json()
-
   if (!newUsername) return NextResponse.json({ error: 'Username baru diperlukan' }, { status: 400 })
 
   const trimmed = newUsername.toLowerCase().trim()
@@ -58,7 +68,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Username hanya boleh huruf kecil, angka, -, _' }, { status: 400 })
   }
 
-  // Cek ketersediaan
+  if (reservedWords.includes(trimmed)) {
+    return NextResponse.json({ error: 'Username tidak tersedia' }, { status: 409 })
+  }
+
   const { data: existing } = await supabase
     .from('profiles')
     .select('id')
