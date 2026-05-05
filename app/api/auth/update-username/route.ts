@@ -3,16 +3,126 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 const reservedWords = [
-  'admin', 'moderator', 'staff', 'owner', 'root', 'system', 'bot', 'asuma',
-  'whatsapp', 'wa', 'wabot', 'api', 'auth', 'login', 'logout', 'register',
-  'dashboard', 'settings', 'profile', 'account', 'test', 'demo', 'guest',
-  'user', 'users', 'support', 'help', 'info', 'contact', 'about', 'privacy',
-  'select', 'insert', 'update', 'delete', 'drop', 'create', 'alter',
-  'script', 'alert', 'cookie', 'session', 'token', 'password',
-  'explore', 'jadibot', 'pricing', 'status', 'offline', 'chat', 'stats',
-  'sitemap', 'robots', 'manifest', 'new', 'edit', 'view', 'list', 'all',
+  // === System & Admin ===
+  'admin', 'administrator', 'root', 'superuser', 'su', 'sysadmin', 'moderator',
+  'staff', 'owner', 'founder', 'webmaster', 'postmaster', 'hostmaster',
+  'dev', 'developer', 'system', 'sys',
+
+  // === Dashboard & Panel ===
+  'dashboard', 'dash', 'panel', 'cp', 'cpanel', 'control', 'manage', 'management',
+
+  // === Auth & Security ===
+  'auth', 'oauth', 'openid', 'sso', 'ldap', 'jwt', 'token', 'secret', 'key',
+  'login', 'logout', 'signin', 'signup', 'signout', 'register', 'registration',
+  'forgot', 'forgot-password', 'reset', 'reset-password', 'verify', 'verification',
+  'activate', 'activation', 'deactivate', 'suspend', 'banned', 'ban',
+  'password', 'passwd', 'pwd', 'session', '2fa', 'otp',
+
+  // === Web Routes & Paths ===
+  'api', 'api1', 'api2', 'v1', 'v2', 'v3', 'v4', 'v5',
+  'home', 'index', 'main', 'app', 'apps',
+  'about', 'about-us', 'contact', 'contact-us', 'help', 'support', 'faq',
+  'terms', 'tos', 'privacy', 'privacy-policy', 'policy', 'legal', 'disclaimer',
+  'status', 'stats', 'ping', 'health', 'healthcheck', 'uptime',
+  'docs', 'documentation', 'wiki', 'guide', 'tutorial', 'learn',
+  'forum', 'community', 'member', 'members', 'group', 'groups',
+  'account', 'accounts', 'profile', 'profiles', 'user', 'username', 'users',
+  'settings', 'setting', 'config', 'configuration', 'preferences',
+  'search', 'find', 'browse', 'explore', 'discover', 'filter', 'sort',
+  'upload', 'uploads', 'download', 'downloads', 'file', 'files',
+  'media', 'image', 'images', 'video', 'videos', 'audio', 'photo', 'photos',
+  'asset', 'assets', 'static', 'public', 'private', 'protected',
+  'cache', 'tmp', 'temp', 'log', 'logs', 'backup', 'backups',
+
+  // === Blog & Content ===
+  'blog', 'blogs', 'news', 'article', 'articles', 'post', 'posts',
+  'tag', 'tags', 'category', 'categories', 'archive', 'archives',
+  'author', 'authors', 'comment', 'comments', 'thread', 'threads',
+  'topic', 'topics', 'feed', 'rss', 'atom',
+
+  // === E-Commerce ===
+  'shop', 'store', 'product', 'products', 'item', 'items',
+  'cart', 'checkout', 'order', 'orders', 'payment', 'payments',
+  'invoice', 'invoices', 'billing', 'bill', 'pricing', 'price', 'plan', 'plans',
+  'buy', 'sell', 'deal', 'deals', 'promo', 'promotion', 'discount', 'coupon',
+  'offer', 'offers', 'voucher', 'gift', 'giftcard', 'subscription', 'subscribe',
+  'membership', 'memberships', 'trial', 'free', 'premium', 'pro', 'enterprise',
+  'wishlist', 'compare', 'review', 'reviews', 'rating',
+
+  // === Hosting & Domain ===
+  'hosting', 'domain', 'domains', 'server', 'servers', 'dns', 'ssl', 'tls',
+  'mail', 'email', 'webmail', 'smtp', 'imap', 'pop', 'pop3',
+  'ftp', 'sftp', 'ssh', 'cdn', 'proxy', 'gateway', 'loadbalancer',
+
+  // === Database ===
+  'db', 'database', 'mysql', 'postgres', 'mongo', 'redis', 'sql', 'nosql',
+  'sqlite', 'mariadb', 'oracle',
+
+  // === Tech Stack ===
+  'node', 'npm', 'yarn', 'pnpm', 'git', 'github', 'gitlab', 'bitbucket',
+  'docker', 'kubernetes', 'k8s', 'pod', 'container',
+  'php', 'python', 'java', 'ruby', 'rust', 'go', 'golang',
+  'html', 'css', 'javascript', 'typescript', 'js', 'ts',
+  'json', 'xml', 'yaml', 'yml', 'csv', 'graphql', 'rest', 'soap',
+
+  // === Subdomain & Testing ===
+  'www', 'ww', 'web', 'site', 'website', 'm', 'mobile',
+  'dev', 'staging', 'test', 'testing', 'demo', 'beta', 'alpha', 'sandbox',
+  'preview', 'draft', 'debug', 'local', 'localhost', '127001', '0000',
+
+  // === Brand Protection ===
+  'official', 'verified', 'real', 'original', 'genuine', 'legit',
+
+  // === Spam / Abuse ===
+  'null', 'undefined', 'none', 'void', 'nan', 'inf', 'infinity',
+  'true', 'false', 'yes', 'no', 'on', 'off', 'all', 'any', 'each', 'every',
+  'test', 'testing', 'dummy', 'sample', 'example', 'demo',
+  'guest', 'anonymous', 'anon', 'nobody', 'anyone',
+  'spam', 'abuse', 'report', 'scam', 'phising', 'hack', 'hacker',
+  'crack', 'exploit', 'ddos', 'deface',
+
+  // === Social & Brand ===
+  'asuma', 'asumabot',
+  'whatsapp', 'wa', 'wabot', 'telegram', 'bot', 'robot',
+  'facebook', 'fb', 'google', 'apple', 'twitter', 'x', 'instagram', 'ig',
+  'tiktok', 'youtube', 'linkedin', 'github', 'discord', 'slack', 'twitch',
+  'signal', 'line', 'wechat', 'snapchat', 'reddit', 'pinterest',
+
+  // === Marketing & Analytics ===
+  'ads', 'ad', 'advertise', 'advertising', 'sponsor', 'sponsored',
+  'affiliate', 'referral', 'ref', 'invite', 'invites',
+  'track', 'tracking', 'analytics', 'metric', 'metrics', 'statistic',
+  'newsletter', 'subscribe', 'unsubscribe', 'mailing', 'campaign',
+  'survey', 'poll', 'feedback', 'testimonial',
+
+  // === Web Common ===
+  '404', '500', 'error', 'errors', 'maintenance', 'offline',
+  'sitemap', 'robots', 'manifest', 'humans', 'crossdomain',
+  'favicon', 'icon', 'icons', 'font', 'fonts',
+  'service', 'services', 'page', 'pages', 'feature', 'features',
+  'customer', 'client', 'partner', 'partners',
+  'cron', 'job', 'jobs', 'task', 'tasks', 'queue', 'worker',
+
+  // === Other Actions ===
+  'callback', 'webhook', 'hook', 'endpoint', 'redirect', 'url', 'uri',
+  'new', 'edit', 'view', 'list', 'delete', 'remove', 'add', 'create',
+  'select', 'insert', 'update', 'drop', 'alter', 'grant', 'revoke',
+  'script', 'alert', 'cookie', 'session', 'storage',
+
+  // === Kata Kotor / Umpatan ===
   'anjing', 'bangsat', 'kontol', 'memek', 'ngentot', 'jancok', 'babi', 'tolol',
-]
+  'goblok', 'tai', 'bajingan', 'sial', 'setan', 'kampret', 'brengsek',
+  'bego', 'idiot', 'gila', 'sinting', 'edan', 'bodat', 'pecun', 'fuck',
+  'shit', 'asshole', 'bastard', 'damn', 'cunt', 'dick', 'pussy',
+  'motherfucker', 'bitch', 'whore', 'slut',
+
+  // === Istilah Bot / Automate ===
+  'jadibot', 'bot', 'botz', 'automate', 'scrape', 'crawler', 'spider',
+
+  // === Umum Lain ===
+  'chat', 'message', 'inbox', 'notification', 'alert',
+  'site', 'sites', 'link', 'links'
+];
 
 export async function PATCH(request: Request) {
   const cookieStore = request.headers.get('cookie') || ''
