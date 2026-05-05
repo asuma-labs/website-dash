@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 
 export async function POST(request: Request) {
-  const { username, password } = await request.json()
+  const { username, password, turnstileToken } = await request.json()
 
   if (!username || !password) {
     return NextResponse.json({ error: 'Username dan password wajib diisi' }, { status: 400 })
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   await supabaseAdmin.from('magic_tokens').insert({
     user_id: profile.id,
     token: loginToken,
-    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   })
 
   const response = NextResponse.json({
@@ -46,12 +46,14 @@ export async function POST(request: Request) {
     username: profile.username,
   })
 
+  // Cookie bisa diakses dari semua subdomain
   response.cookies.set('auth_token', loginToken, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7,
+    domain: '.asuma.my.id', // ← SEMUA SUBDOMAIN
+    maxAge: 60 * 60 * 24 * 7, // 7 hari
   })
 
   return response
