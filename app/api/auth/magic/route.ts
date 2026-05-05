@@ -85,13 +85,14 @@ export async function POST(request: Request) {
     username: profile.username,
   })
 
-  response.cookies.set('auth_token', loginToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7,
-  })
+response.cookies.set('auth_token', loginToken, {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'lax',
+  path: '/',
+  domain: '.asuma.my.id',
+  maxAge: 60 * 60 * 24 * 7,
+})
 
   return response
 }
