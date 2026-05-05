@@ -19,8 +19,7 @@ export async function POST(request: Request) {
   let query = supabase.from('profiles').select('id, username, phone_number')
 
   if (phone_number) {
-    const cleanPhone = phone_number.replace(/[^0-9]/g, '')
-    query = query.eq('phone_number', cleanPhone)
+    query = query.eq('phone_number', phone_number.replace(/[^0-9]/g, ''))
   }
   if (username) {
     query = query.eq('username', username.toLowerCase().trim())
@@ -29,7 +28,7 @@ export async function POST(request: Request) {
   const { data: profile, error } = await query.single()
 
   if (error || !profile) {
-    return NextResponse.json({ error: 'Akun tidak ditemukan. Ketik .daftar untuk membuat akun baru.' }, { status: 404 })
+    return NextResponse.json({ error: 'Akun tidak ditemukan' }, { status: 404 })
   }
 
   await supabase
@@ -40,25 +39,17 @@ export async function POST(request: Request) {
 
   const magicToken = crypto.randomBytes(32).toString('hex')
 
-  const { error: tokenError } = await supabase
-    .from('magic_tokens')
-    .insert({
-      user_id: profile.id,
-      token: magicToken,
-      expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-    })
+  await supabase.from('magic_tokens').insert({
+    user_id: profile.id,
+    token: magicToken,
+    expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+  })
 
-  if (tokenError) {
-    console.error('Token insert error:', tokenError)
-    return NextResponse.json({ error: 'Gagal membuat link login' }, { status: 500 })
-  }
-
-  const magicLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/magic?token=${magicToken}`
+  const magicLink = `https://dash.asuma.my.id/auth/magic?token=${magicToken}`
 
   return NextResponse.json({
     success: true,
     username: profile.username,
-    phone_number: profile.phone_number,
     magic_link: magicLink,
   })
 }
