@@ -38,17 +38,17 @@
   "redirects": [
     {
       "source": "/grup",
-      "destination": "https://chat.whatsapp.com/XXXXXXXXXX",
+      "destination": "https://chat.whatsapp.com/IEGSv0bv5gC2etNuXJajd0",
       "permanent": false
     },
     {
       "source": "/ch",
-      "destination": "https://whatsapp.com/channel/XXXXXXXX",
+      "destination": "https://whatsapp.com/channel/0029VaN28lnGU3BROmG4Tx3j",
       "permanent": false
     },
     {
       "source": "/channel",
-      "destination": "https://whatsapp.com/channel/XXXXXXXX",
+      "destination": "https://whatsapp.com/channel/0029VaN28lnGU3BROmG4Tx3j",
       "permanent": false
     },
     {
