@@ -62,17 +62,18 @@ self.addEventListener('push', (event) => {
 
   const data = event.data.json()
 
-  const options = {
-    body: data.body || 'Notifikasi dari Asuma MD',
-    icon: '/icons/android-chrome-192x192.png',
-    badge: '/icons/android-chrome-192x192.png',
-    vibrate: [200, 100, 200],
-    tag: data.tag || 'asuma-notif',
-    renotify: true,
-    requireInteraction: data.requireInteraction || false,
-    data: { url: data.url || '/' },
-    actions: data.actions || [],
-  }
+const options = {
+  body: data.body || 'Notifikasi dari Asuma MD',
+  icon: '/icons/android-chrome-192x192.png',
+  badge: '/icons/android-chrome-192x192.png',
+  image: data.image || '/icons/android-chrome-512x512.png', // ← TAMBAH
+  vibrate: [200, 100, 200],
+  tag: data.tag || 'asuma-notif',
+  renotify: true,
+  requireInteraction: data.requireInteraction || false,
+  data: { url: data.url || '/' },
+  actions: data.actions || [],
+}
 
   event.waitUntil(self.registration.showNotification(data.title || 'Asuma MD', options))
 })
