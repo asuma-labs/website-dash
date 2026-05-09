@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { FaWhatsapp, FaTiktok } from 'react-icons/fa'
 
-export { metadata } from './metadata'
+//export { metadata } from './metadata'
 
 const steps = [
   {
