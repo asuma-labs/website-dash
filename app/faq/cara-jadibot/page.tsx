@@ -4,10 +4,10 @@ import Link from 'next/link'
 import { ArrowLeft, Smartphone, UserPlus, Bot, HelpCircle } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Cara Jadibot - Panduan Lengkap | Asuma MD',
+  title: 'Cara Jadibot - Panduan Lengkap',
   description: 'Panduan lengkap cara membuat bot WhatsApp dengan Asuma MD. Mulai dari daftar, pairing code, sampai bot online.',
   openGraph: {
-    title: 'Cara Jadibot - Panduan Lengkap | Asuma MD',
+    title: 'Cara Jadibot - Panduan Lengkap',
     description: 'Panduan lengkap cara membuat bot WhatsApp dengan Asuma MD.',
   },
 }
