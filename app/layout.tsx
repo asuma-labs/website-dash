@@ -1,5 +1,6 @@
 // app/layout.tsx
 import './globals.css'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { Analytics } from '@vercel/analytics/next'
@@ -12,7 +13,7 @@ const inter = Inter({
   weight: ['400', '500', '600', '700'],
 })
 
-export const metadata = {
+export const metadata: Metadata = {
   title: {
     default: 'Asuma - Layanan Bot WhatsApp Premium',
     template: '%s | Asuma',
@@ -29,6 +30,18 @@ export const metadata = {
   publisher: 'Asuma',
   metadataBase: new URL('https://asuma.my.id'),
   alternates: { canonical: 'https://asuma.my.id' },
+
+  // ✅ manifest dipindah ke sini
+  manifest: '/manifest.webmanifest',
+
+  // ✅ PWA meta via appLinks / other
+  applicationName: 'Asuma Bot',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Asuma Bot',
+  },
+
   openGraph: {
     title: 'Asuma - Layanan Bot WhatsApp Premium',
     description: 'Jasa jadibot WhatsApp cepat, aman, dan stabil.',
@@ -54,7 +67,18 @@ export const metadata = {
   verification: {
     google: 'hMmtzBFUiEDI1-fsDioUzB0VgKiARhdFCaAwKIBmEJw',
   },
-  robots: { index: true, follow: true, 'max-image-preview': 'large' },
+
+  // ✅ robots dipisah lebih proper
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+    },
+  },
+
   icons: {
     icon: [
       { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
@@ -67,7 +91,7 @@ export const metadata = {
   category: 'technology',
 }
 
-export const viewport = {
+export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -86,11 +110,7 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/manifest.webmanifest" />
-        <meta name="application-name" content="Asuma Bot" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Asuma Bot" />
+        {/* ✅ Hanya tag yang belum bisa di-handle Metadata API */}
         <meta name="mobile-web-app-capable" content="yes" />
         <script
           dangerouslySetInnerHTML={{
@@ -113,10 +133,9 @@ export default function RootLayout({
           storageKey="asuma-theme"
         >
           {children}
+          <Analytics />
+          <SpeedInsights />
         </ThemeProvider>
-
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   )
