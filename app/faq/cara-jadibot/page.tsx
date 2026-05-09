@@ -99,7 +99,7 @@ const supportLinks = [
     icon: FaWhatsapp,
     label: 'WhatsApp Support',
     value: 'Chat Sekarang',
-    href: 'https://wa.me/6283113264512',
+    href: 'https://wa.me/447920601019',
     gradient: 'from-green-500 to-emerald-600',
     hoverBorder: 'hover:border-green-500/25',
     hoverText: 'group-hover:text-green-400',
