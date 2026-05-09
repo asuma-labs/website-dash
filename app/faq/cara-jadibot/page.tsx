@@ -16,9 +16,7 @@ import {
   Clock,
   Sparkles,
 } from 'lucide-react'
-import { FaWhatsapp, FaTiktok } from 'react-icons/fa'
-
-//export { metadata } from './metadata'
+import { FaWhatsapp } from 'react-icons/fa'
 
 const steps = [
   {
@@ -121,16 +119,18 @@ const supportLinks = [
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
-  show: (i = 0) => ({
+  show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.45, delay: i * 0.07, ease: [0.25, 0.46, 0.45, 0.94] },
-  }),
+    transition: { duration: 0.45, ease: 'easeOut' },
+  },
 }
 
 const stagger = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.07 } },
+  show: {
+    transition: { staggerChildren: 0.07 },
+  },
 }
 
 export default function CaraJadibotPage() {
@@ -166,7 +166,7 @@ export default function CaraJadibotPage() {
         </motion.div>
 
         <motion.div className="mb-14" initial="hidden" animate="show" variants={stagger}>
-          <motion.div variants={fadeUp} custom={0}>
+          <motion.div variants={fadeUp}>
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium mb-5">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
               Panduan Resmi Asuma
@@ -175,7 +175,6 @@ export default function CaraJadibotPage() {
 
           <motion.h1
             variants={fadeUp}
-            custom={1}
             className="text-4xl sm:text-5xl font-bold mb-4 leading-tight tracking-tight"
           >
             Cara{' '}
@@ -184,7 +183,7 @@ export default function CaraJadibotPage() {
             </span>
           </motion.h1>
 
-          <motion.p variants={fadeUp} custom={2} className="text-gray-400 text-lg leading-relaxed max-w-lg">
+          <motion.p variants={fadeUp} className="text-gray-400 text-lg leading-relaxed max-w-lg">
             Buat bot WhatsApp dalam 4 langkah mudah. Tidak perlu keahlian teknis, siapapun bisa.
           </motion.p>
         </motion.div>
@@ -208,7 +207,6 @@ export default function CaraJadibotPage() {
               <motion.div
                 key={i}
                 variants={fadeUp}
-                custom={i}
                 whileHover={{ scale: 1.005 }}
                 className="group relative bg-white/[0.025] border border-white/[0.07] rounded-2xl p-5 hover:border-white/[0.13] hover:bg-white/[0.04] transition-colors duration-300 cursor-default"
               >
@@ -304,7 +302,6 @@ export default function CaraJadibotPage() {
               <motion.div
                 key={i}
                 variants={fadeUp}
-                custom={i}
                 className="group bg-white/[0.025] border border-white/[0.07] rounded-2xl p-5 hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-200"
               >
                 <div className="flex items-start gap-3">
@@ -345,7 +342,6 @@ export default function CaraJadibotPage() {
                 <motion.a
                   key={i}
                   variants={fadeUp}
-                  custom={i}
                   href={link.href}
                   target={link.href.startsWith('mailto') ? undefined : '_blank'}
                   rel={link.href.startsWith('mailto') ? undefined : 'noopener noreferrer'}
