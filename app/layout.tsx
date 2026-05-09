@@ -14,7 +14,6 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  // Title template untuk semua halaman
   title: {
     default: 'Asuma - Layanan Bot WhatsApp Premium',
     template: '%s | Asuma',
@@ -75,6 +74,10 @@ export const metadata: Metadata = {
   },
   category: 'technology',
 }
+
+// ❌ JANGAN SET openGraph & twitter di sini!
+// ❌ JANGAN SET openGraph & twitter di sini!
+// ❌ JANGAN SET openGraph & twitter di sini!
 
 export const viewport: Viewport = {
   width: 'device-width',
