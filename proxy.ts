@@ -9,6 +9,7 @@ const publicPaths = [
   '/faq',
   '/privacy',
   '/terms',
+  '/og',
   '/jadibot',
   '/offline',
   '/explore',
