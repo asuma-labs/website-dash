@@ -1,4 +1,4 @@
-// app/faq/cara-jadibot/metadata.ts
+// app/faq/cara-jadibot/layout.tsx
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -30,4 +30,12 @@ export const metadata: Metadata = {
     description: 'Panduan lengkap cara membuat bot WhatsApp dengan Asuma MD.',
     images: ['/icons/android-chrome-512x512.png'],
   },
+}
+
+export default function CaraJadibotLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return <>{children}</>
 }
