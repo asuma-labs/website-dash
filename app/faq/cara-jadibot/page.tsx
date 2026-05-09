@@ -10,7 +10,6 @@ import {
   Bot,
   HelpCircle,
   Mail,
-  Github,
   ChevronRight,
   Zap,
   Shield,
