@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Sidebar from '@/components/Sidebar'
 import BottomNav from '@/components/BottomNav'
-import SessionSetter from '@/components/SessionSetter'
 import NotificationPermissionModal from '@/components/NotificationPermissionModal'
 import type { Metadata } from 'next'
 
@@ -45,16 +44,17 @@ export default async function UsernameLayout({
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
+  // Cek token dengan grace period (expired pun tetap valid)
   const { data: magicToken } = await supabase
     .from('magic_tokens')
-    .select('user_id')
+    .select('user_id, expires_at')
     .eq('token', token)
     .eq('used', false)
-    .gt('expires_at', new Date().toISOString())
     .single()
 
   if (!magicToken) redirect('/login')
 
+  // Cek user
   const { data: profile } = await supabase
     .from('profiles')
     .select('username')
@@ -62,6 +62,11 @@ export default async function UsernameLayout({
     .single()
 
   if (!profile || profile.username !== username) redirect('/login')
+
+  // Perpanjang token otomatis tiap user aktif (+7 hari dari sekarang)
+  await supabase.from('magic_tokens').update({
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+  }).eq('token', token)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-gray-950 text-white overflow-hidden">
@@ -71,7 +76,6 @@ export default async function UsernameLayout({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/3 rounded-full blur-[150px]" />
       </div>
 
-      <SessionSetter userId={magicToken.user_id} />
       <Sidebar username={profile.username} />
       <div className="lg:ml-72 min-h-screen pb-28 lg:pb-0">
         <main className="relative p-4 pt-20 lg:p-8 lg:pt-8">
