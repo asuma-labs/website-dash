@@ -2,31 +2,44 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const publicPaths = [
+  '/',
+  '/login',
+  '/faq',
+  '/privacy',
+  '/terms',
+  '/og',
+  '/jadibot',
+  '/offline',
+  '/explore',
+  '/pricing',
+  '/status',
+  '/shop',
+  '/auth',
+  '/api',
+]
+
 export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
-  const isApiPath = pathname.startsWith('/api/')
-  const isAuthPath = pathname.startsWith('/auth/')
+
+  const isPublicPath = publicPaths.some(
+    (p) => pathname === p || pathname.startsWith(p + '/')
+  )
   const isStaticFile = /\.(.*)$/.test(pathname)
 
-  if (isApiPath || isAuthPath || isStaticFile) {
+  if (isPublicPath || isStaticFile) {
     return NextResponse.next()
   }
 
   const token = request.cookies.get('auth_token')?.value
   const isLoggedIn = !!token
   const isLoginPage = pathname === '/login'
-  const isHomePage = pathname === '/'
 
-  if (isLoggedIn && (isLoginPage || isHomePage)) {
+  if (isLoggedIn && isLoginPage) {
     const supabaseAdmin = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          getAll() { return request.cookies.getAll() },
-          setAll() {},
-        },
-      }
+      { cookies: { getAll() { return request.cookies.getAll() }, setAll() {} } }
     )
 
     const { data: magicToken } = await supabaseAdmin
@@ -37,7 +50,6 @@ export default async function proxy(request: NextRequest) {
       .single()
 
     if (magicToken) {
-      // Token valid walau expired (grace period 30 hari)
       const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('username')
@@ -45,16 +57,13 @@ export default async function proxy(request: NextRequest) {
         .single()
 
       if (profile) {
-        const dashUrl = new URL(`/${profile.username}`, request.url)
-        return NextResponse.redirect(dashUrl)
+        return NextResponse.redirect(new URL(`/${profile.username}`, request.url))
       }
     }
   }
 
-  if (!isLoggedIn && !isLoginPage && !isHomePage) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
+  if (!isLoggedIn && !isLoginPage && !isPublicPath) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   return NextResponse.next()
