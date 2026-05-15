@@ -1,4 +1,8 @@
-'use client'
+// components/SessionSetter.tsx
+export default function SessionSetter({ userId }: { userId: string }) {
+  return null
+}
+/*'use client'
 
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useRef } from 'react'
@@ -37,4 +41,4 @@ export default function SessionSetter({ userId }: { userId: string }) {
   }, [userId, supabase.auth])
 
   return null
-}
+}*/
