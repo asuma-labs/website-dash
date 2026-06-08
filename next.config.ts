@@ -13,6 +13,11 @@ const nextConfig = {
         hostname: 'cdn.asuma.my.id',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'bot.asuma.my.id',
+        pathname: '/**',
+      },
     ],
   },
 };
